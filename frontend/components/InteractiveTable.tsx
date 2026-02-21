@@ -113,7 +113,11 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse }: 
                 <TableCell className="text-zinc-600 font-semibold text-[15px] py-4">{course.date}</TableCell>
                 <TableCell className="text-zinc-600 text-[15px] py-4">{course.time_slot}</TableCell>
                 <TableCell className="py-4">
-                  <Badge variant="outline" className={`text-sm px-3 py-1 font-bold ${course.category === 'Exam' ? 'border-zinc-800 bg-zinc-800 text-white' : course.category === 'PBL' ? 'border-purple-200 bg-purple-50 text-purple-700' : 'bg-zinc-100 text-zinc-800'}`}>
+                  <Badge 
+                    variant="outline" 
+                    title={course.category}
+                    className={`text-sm px-3 py-1 font-bold max-w-[140px] truncate inline-block align-middle ${course.category === 'Exam' ? 'border-zinc-800 bg-zinc-800 text-white' : course.category === 'PBL' ? 'border-purple-200 bg-purple-50 text-purple-700' : 'bg-zinc-100 text-zinc-800'}`}
+                  >
                     {course.category}
                   </Badge>
                 </TableCell>
