@@ -117,67 +117,75 @@ export default function Home() {
   });
 
   return (
-    <main className="min-h-screen bg-zinc-50/50 p-6 md:p-10 text-zinc-900 font-sans">
+    <main className="min-h-screen bg-zinc-50/50 p-4 md:p-8 text-zinc-900 font-sans text-sm md:text-base">
       <Toaster position="bottom-right" />
-      <style dangerouslySetInnerHTML={{__html: `.fc-theme-standard td, .fc-theme-standard th { border-color: #e4e4e7; } .fc-timegrid-slot { height: 4rem !important; } .fc-event-main { white-space: normal !important; padding: 8px !important; line-height: 1.5; font-size: 0.95rem; font-weight: 600; overflow-y: auto !important; } .fc-v-event { border-radius: 6px; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }`}} />
+      <style dangerouslySetInnerHTML={{__html: `
+        .fc-theme-standard td, .fc-theme-standard th { border-color: #e4e4e7; } 
+        .fc-timegrid-slot { height: 3.5rem !important; } 
+        .fc-event-main { white-space: normal !important; padding: 6px !important; line-height: 1.4; font-size: 0.85rem; font-weight: 600; overflow-y: auto !important; } 
+        .fc-v-event { border-radius: 6px; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        /* 🚀 新增：全域表格防擠壓與文字截斷設定 */
+        .table-container table { table-layout: fixed; width: 100%; }
+        .course-truncate { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+      `}} />
       
-      {/* 🚀 關鍵修改：將畫布大幅加寬至 max-w-[1600px] */}
-      <div className="max-w-[1600px] mx-auto space-y-10">
+      {/* 關鍵修改：畫布寬度保留，但內部間距與字體稍微收斂 */}
+      <div className="max-w-[1400px] mx-auto space-y-8">
         
-        <header className="border-b border-zinc-200 pb-6 pt-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <header className="border-b border-zinc-200 pb-4 pt-2 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div>
-            <h1 className="text-5xl font-black tracking-tight text-zinc-900 mb-3">NYCU Med10 戰略儀表板</h1>
-            <p className="text-zinc-500 text-xl font-bold flex items-center gap-2"><CalendarIcon className="w-6 h-6" /> 114-2 學期 臨床醫學進度追蹤</p>
+            <h1 className="text-4xl font-black tracking-tight text-zinc-900 mb-2">NYCU Med10 戰略儀表板</h1>
+            <p className="text-zinc-500 text-lg font-bold flex items-center gap-2"><CalendarIcon className="w-5 h-5" /> 114-2 學期 臨床醫學進度追蹤</p>
           </div>
         </header>
 
-        {loading ? <div className="flex justify-center items-center h-64 text-zinc-400 font-bold text-xl">系統核心啟動中...</div> : (
+        {loading ? <div className="flex justify-center items-center h-64 text-zinc-400 font-bold text-lg">系統核心啟動中...</div> : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card className="shadow-sm border-zinc-200 bg-white p-2">
-                <CardHeader className="pb-4 flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg font-bold text-zinc-500 flex items-center gap-2"><Flame className="w-6 h-6 text-orange-500" /> 下一場區段考倒數</CardTitle>
-                  <Badge variant="outline" className="bg-orange-50 text-orange-700 border-none font-bold text-base px-3 py-1">{nextExam?.date || "未知"}</Badge>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="shadow-sm border-zinc-200 bg-white p-1">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-base font-bold text-zinc-500 flex items-center gap-2"><Flame className="w-5 h-5 text-orange-500" /> 下一場區段考倒數</CardTitle>
+                  <Badge variant="outline" className="bg-orange-50 text-orange-700 border-none font-bold text-sm px-3 py-1">{nextExam?.date || "未知"}</Badge>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-7xl font-black text-zinc-900">{daysToExam > 0 ? daysToExam : 0}</span>
-                    <span className="text-2xl text-zinc-500 font-bold">天</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-6xl font-black text-zinc-900">{daysToExam > 0 ? daysToExam : 0}</span>
+                    <span className="text-xl text-zinc-500 font-bold">天</span>
                   </div>
-                  <p className="text-lg text-zinc-500 mt-4 font-bold truncate">目標：{nextExam?.topic || "尚未排定"}</p>
+                  <p className="text-base text-zinc-500 mt-3 font-bold truncate">目標：{nextExam?.topic || "尚未排定"}</p>
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm border-zinc-200 bg-white overflow-hidden p-2">
-                <CardHeader className="pb-4 flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg font-bold text-zinc-500 flex items-center gap-2"><Target className="w-6 h-6 text-green-600" /> 該考區精準內化率</CardTitle>
+              <Card className="shadow-sm border-zinc-200 bg-white overflow-hidden p-1">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-base font-bold text-zinc-500 flex items-center gap-2"><Target className="w-5 h-5 text-green-600" /> 該考區精準內化率</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-5xl font-black text-zinc-900">{blockProgressRate.toFixed(1)} <span className="text-3xl text-zinc-400 font-bold">%</span></div>
-                  <div className="flex items-center justify-between mt-5 text-base font-bold text-zinc-500 mb-2">
+                  <div className="text-4xl font-black text-zinc-900">{blockProgressRate.toFixed(1)} <span className="text-2xl text-zinc-400 font-bold">%</span></div>
+                  <div className="flex items-center justify-between mt-4 text-sm font-bold text-zinc-500 mb-2">
                     <span>已掌握 <span className="text-zinc-800">{blockStudied}</span> 堂</span>
                     <span>範圍總計 <span className="text-zinc-800">{blockTotal}</span> 堂</span>
                   </div>
-                  <div className="w-full bg-zinc-100 h-3 rounded-full overflow-hidden mb-4">
+                  <div className="w-full bg-zinc-100 h-2.5 rounded-full overflow-hidden mb-3">
                     <div className="bg-green-500 h-full transition-all duration-1000 ease-out" style={{ width: `${blockProgressRate}%` }} />
                   </div>
-                  <div className="text-sm text-zinc-500 bg-zinc-50 p-3 rounded-lg flex items-start gap-2 border border-zinc-100 font-medium">
+                  <div className="text-xs text-zinc-500 bg-zinc-50 p-2.5 rounded-lg flex items-start gap-2 border border-zinc-100 font-medium">
                     <Info className="w-4 h-4 mt-0.5 shrink-0" /><span className="leading-relaxed">範圍涵蓋：{blockCategoriesIncluded || "無"}</span>
                   </div>
                 </CardContent>
               </Card>
             </div>
             
-            <div className="bg-white p-8 rounded-2xl border border-zinc-200 shadow-sm">
-              <h3 className="text-xl font-black text-zinc-800 mb-6 flex items-center gap-2"><Activity className="w-6 h-6 text-blue-500" /> 各科目獨立進度追蹤</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-6">
+            <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
+              <h3 className="text-lg font-black text-zinc-800 mb-5 flex items-center gap-2"><Activity className="w-5 h-5 text-blue-500" /> 各科目獨立進度追蹤</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-5">
                 {subjectStats.slice(0, 16).map(stat => (
                   <div key={stat.category} className="space-y-2">
-                    <div className="flex justify-between items-center text-base">
+                    <div className="flex justify-between items-center text-sm">
                       <span className="font-bold text-zinc-700 truncate pr-2" title={stat.category}>{stat.category}</span>
-                      <span className="text-zinc-500 font-mono text-sm font-bold">{stat.studied}/{stat.total}</span>
+                      <span className="text-zinc-500 font-mono text-xs font-bold">{stat.studied}/{stat.total}</span>
                     </div>
-                    <div className="w-full bg-zinc-100 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-zinc-100 h-1.5 rounded-full overflow-hidden">
                       <div className="bg-blue-500 h-full transition-all duration-500" style={{ width: `${stat.rate}%` }} />
                     </div>
                   </div>
@@ -186,17 +194,17 @@ export default function Home() {
             </div>
 
             <Tabs defaultValue="list" className="w-full">
-              <div className="flex justify-between items-end mb-6 mt-10">
-                <TabsList className="bg-zinc-100/80 p-1.5 rounded-lg">
-                  <TabsTrigger value="list" className="font-bold text-base px-6 py-2">📝 互動列表</TabsTrigger>
-                  <TabsTrigger value="calendar" className="font-bold text-base px-6 py-2">📅 戰略週曆</TabsTrigger>
+              <div className="flex justify-between items-end mb-4 mt-8">
+                <TabsList className="bg-zinc-100/80 p-1 rounded-lg">
+                  <TabsTrigger value="list" className="font-bold text-sm px-5 py-1.5">📝 互動列表</TabsTrigger>
+                  <TabsTrigger value="calendar" className="font-bold text-sm px-5 py-1.5">📅 戰略週曆</TabsTrigger>
                 </TabsList>
               </div>
-              <TabsContent value="list" className="bg-white border border-zinc-200 rounded-2xl shadow-sm mt-0 p-6">
+              <TabsContent value="list" className="bg-white border border-zinc-200 rounded-2xl shadow-sm mt-0 p-5 table-container">
                 <InteractiveTable courses={enrichedCourses} allExams={allExams} onUpdateCourse={handleUpdateCourse} />
               </TabsContent>
-              <TabsContent value="calendar" className="bg-white p-8 rounded-2xl border border-zinc-200 shadow-sm mt-0">
-                <FullCalendar plugins={[dayGridPlugin, timeGridPlugin]} initialView="timeGridWeek" headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek" }} slotMinTime="08:00:00" slotMaxTime="18:00:00" height={1000} events={calendarEvents} expandRows={true} />
+              <TabsContent value="calendar" className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm mt-0">
+                <FullCalendar plugins={[dayGridPlugin, timeGridPlugin]} initialView="timeGridWeek" headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek" }} slotMinTime="08:00:00" slotMaxTime="18:00:00" height={900} events={calendarEvents} expandRows={true} />
               </TabsContent>
             </Tabs>
           </>

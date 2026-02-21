@@ -117,8 +117,11 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse }: 
                     {course.category}
                   </Badge>
                 </TableCell>
-                <TableCell className="font-bold text-zinc-900 text-[16px] py-4" title={course.topic}>
-                  {course.topic}
+                <TableCell className="font-bold text-zinc-900 text-[16px] py-4">
+                  {/* 🚀 關鍵修改：加入 course-truncate 樣式防止欄位被撐爆 */}
+                  <span className="course-truncate" title={course.topic}>
+                    {course.topic}
+                  </span>
                 </TableCell>
                 <TableCell className="py-4">
                   {["Exam", "Holiday", "PBL"].includes(course.category) ? (
