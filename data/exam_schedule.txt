@@ -1,0 +1,11 @@
+[Orthopedics]:骨骼關節學區段考試(考科尚包括：影像診斷學、核子醫學、放射治療學、復健醫學)
+[Allergy, Immunology, & Rheumatology]:免疫病學區段考試(考科尚包括：影像診斷學、復健醫學)
+[Infectious Diseases]:感染病學考試
+[Pharmacology]:藥理學期中考
+[Nephrology]:腎臟學區段考試(考科尚包括：核子醫學)
+[Pathology&Laboratory]:病理學及實驗期末考
+[Urology]:泌尿學區段考試(考科尚包括：影像診斷學)
+[Pharmacology]:藥理學期末考
+[Hematology]:血液病學區段考試(考科尚包括：放射治療學)
+[Medical Oncology]:醫學腫瘤學區段考試(考科尚包括：核子醫學、影像診斷學、放射治療學、復健醫學)
+[Introduction to Surgery]:外科概論考試
