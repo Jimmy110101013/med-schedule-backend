@@ -23,8 +23,8 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
   const categoryColor = course.category === "Exam"
     ? "border-zinc-800 bg-zinc-800 text-white"
     : course.category === "PBL"
-    ? "border-purple-200 bg-purple-50 text-purple-700"
-    : "bg-zinc-100 text-zinc-800";
+    ? "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
+    : "bg-zinc-100 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200";
 
   // Clamp position so modal doesn't overflow viewport
   const style: React.CSSProperties = {
@@ -40,19 +40,19 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
       <div className="fixed inset-0 z-[9998]" onClick={onClose} />
 
       {/* Modal */}
-      <div style={style} className="w-[320px] bg-white rounded-xl border border-zinc-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div style={style} className="w-[320px] bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="bg-zinc-50 px-4 py-3 flex items-start justify-between gap-2 border-b border-zinc-100">
+        <div className="bg-zinc-50 dark:bg-zinc-900/50 px-4 py-3 flex items-start justify-between gap-2 border-b border-zinc-100 dark:border-zinc-700">
           <div className="min-w-0">
             <Badge variant="outline" className={`text-xs px-2 py-0.5 font-bold mb-1.5 ${categoryColor}`}>
               {course.category}
             </Badge>
-            <p className="text-sm font-bold text-zinc-900 leading-snug line-clamp-2">{course.topic}</p>
-            <p className="text-xs text-zinc-500 mt-1">{course.date} · {course.time_slot}</p>
-            {course.teacher && <p className="text-xs text-zinc-400 mt-0.5">{course.teacher}</p>}
+            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug line-clamp-2">{course.topic}</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{course.date} · {course.time_slot}</p>
+            {course.teacher && <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{course.teacher}</p>}
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-zinc-200 rounded-md transition-colors shrink-0">
-            <X className="w-4 h-4 text-zinc-400" />
+          <button onClick={onClose} className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-md transition-colors shrink-0">
+            <X className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
           </button>
         </div>
 
@@ -60,11 +60,11 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
         <div className="px-4 py-3 space-y-4">
           {/* Attendance */}
           <div>
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block">出席狀態</label>
+            <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5 block">出席狀態</label>
             <select
               value={course.attendance}
               onChange={(e) => onUpdate(course.id, { attendance: e.target.value })}
-              className="w-full bg-white border-2 border-zinc-200 text-sm font-medium rounded-lg px-3 py-2 focus:ring-2 focus:ring-zinc-900 outline-none cursor-pointer text-zinc-800"
+              className="w-full bg-white dark:bg-zinc-700 border-2 border-zinc-200 dark:border-zinc-600 text-sm font-medium rounded-lg px-3 py-2 focus:ring-2 focus:ring-zinc-900 outline-none cursor-pointer text-zinc-800 dark:text-zinc-200"
             >
               <option value="未標記">未標記</option>
               <option value="現場出席">現場出席</option>
@@ -75,12 +75,12 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
 
           {/* Study Progress */}
           <div>
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wide mb-2 block">內化進度</label>
+            <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-2 block">內化進度</label>
             <div className="flex items-center gap-4">
               {["一刷", "二刷", "寫考古"].map(type => {
                 const checked = Array.isArray(course.study_progress) && course.study_progress.includes(type);
                 return (
-                  <label key={type} className={`flex items-center gap-1.5 text-sm cursor-pointer transition-colors ${checked ? "text-green-700 font-extrabold" : "text-zinc-500 hover:text-zinc-800 font-bold"}`}>
+                  <label key={type} className={`flex items-center gap-1.5 text-sm cursor-pointer transition-colors ${checked ? "text-green-700 dark:text-green-400 font-extrabold" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 font-bold"}`}>
                     <input
                       type="checkbox"
                       checked={checked}
@@ -96,7 +96,7 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
 
           {/* Target Exam (read-only display) */}
           {course.target_exam && (
-            <div className="text-xs text-orange-600 bg-orange-50 px-3 py-2 rounded-lg font-bold">
+            <div className="text-xs text-orange-600 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/40 px-3 py-2 rounded-lg font-bold">
               🎯 {course.target_exam}
             </div>
           )}
