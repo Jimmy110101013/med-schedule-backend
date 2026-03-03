@@ -20,8 +20,8 @@ export default function Home() {
 
   useEffect(() => {
     Promise.all([
-      fetch("https://med-schedule-backend.onrender.com/api/courses").then(res => res.json()),
-      fetch("https://med-schedule-backend.onrender.com/api/exam-rules").then(res => res.json())
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/courses`).then(res => res.json()),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules`).then(res => res.json())
     ]).then(([coursesData, rulesData]) => {
       setCourses(coursesData);
       setRules(rulesData);
@@ -32,7 +32,7 @@ export default function Home() {
   const handleUpdateCourse = async (courseId: number, updates: Partial<Course>) => {
     setCourses(prev => prev.map(c => c.id === courseId ? { ...c, ...updates } : c));
     try {
-      await fetch(`https://med-schedule-backend.onrender.com/api/courses/${courseId}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/courses/${courseId}`, {
         method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updates)
       });
     } catch { toast.error("儲存失敗"); }

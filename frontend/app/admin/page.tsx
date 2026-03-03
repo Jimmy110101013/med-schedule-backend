@@ -16,7 +16,7 @@ export default function AdminDashboard() {
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const fetchRules = () => {
-    fetch("https://med-schedule-backend.onrender.com/api/exam-rules").then(res => res.json()).then(data => setRules(data));
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules`).then(res => res.json()).then(data => setRules(data));
   };
 
   useEffect(() => { fetchRules(); }, []);
@@ -25,7 +25,7 @@ export default function AdminDashboard() {
     if (!newKeyword || !newCategories) return toast.error("請填寫完整資訊");
     const isEdit = id !== undefined;
     const categoryList = newCategories.split(";").map(s => s.trim()).filter(s => s);
-    const url = isEdit ? `https://med-schedule-backend.onrender.com/api/exam-rules/${id}` : "https://med-schedule-backend.onrender.com/api/exam-rules";
+    const url = isEdit ? `${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules/${id}` : `${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules`;
     const method = isEdit ? "PUT" : "POST";
 
     try {
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
   const handleDeleteRule = async (ruleId: number) => {
     if (!confirm("確定要刪除這條規則嗎？")) return;
     try {
-      const res = await fetch(`https://med-schedule-backend.onrender.com/api/exam-rules/${ruleId}`, { method: "DELETE" });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules/${ruleId}`, { method: "DELETE" });
       if (res.ok) { toast.success("規則已刪除"); fetchRules(); }
     } catch { toast.error("伺服器連線異常"); }
   };

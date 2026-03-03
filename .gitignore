@@ -4,6 +4,7 @@ env/
 
 # 忽略環境變數與密碼
 .env
+supabase_key.txt
 
 # 忽略 Python 暫存檔
 __pycache__/
