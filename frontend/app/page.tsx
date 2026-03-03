@@ -9,7 +9,9 @@ import { Toaster, toast } from "sonner";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
 import InteractiveTable, { Course } from "@/components/InteractiveTable";
+import CalendarEventModal from "@/components/CalendarEventModal";
 
 interface ExamRule { id: number; keyword: string; categories: string[]; }
 
@@ -17,6 +19,7 @@ export default function Home() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [rules, setRules] = useState<ExamRule[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedEventCourse, setSelectedEventCourse] = useState<{ course: Course; position: { x: number; y: number } } | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -203,8 +206,32 @@ export default function Home() {
               <TabsContent value="list" className="bg-white border border-zinc-200 rounded-2xl shadow-sm mt-0 p-5 table-container">
                 <InteractiveTable courses={enrichedCourses} allExams={allExams} onUpdateCourse={handleUpdateCourse} />
               </TabsContent>
-              <TabsContent value="calendar" className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm mt-0">
-                <FullCalendar plugins={[dayGridPlugin, timeGridPlugin]} initialView="timeGridWeek" headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek" }} slotMinTime="08:00:00" slotMaxTime="18:00:00" height={900} events={calendarEvents} expandRows={true} />
+              <TabsContent value="calendar" className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm mt-0 relative">
+                <FullCalendar
+                  plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                  initialView="timeGridWeek"
+                  headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek" }}
+                  slotMinTime="08:00:00"
+                  slotMaxTime="18:00:00"
+                  height={900}
+                  events={calendarEvents}
+                  expandRows={true}
+                  eventClick={(info) => {
+                    const course = enrichedCourses.find(c => String(c.id) === info.event.id);
+                    if (course) {
+                      const rect = info.el.getBoundingClientRect();
+                      setSelectedEventCourse({ course, position: { x: rect.right, y: rect.top } });
+                    }
+                  }}
+                />
+                {selectedEventCourse && (
+                  <CalendarEventModal
+                    course={enrichedCourses.find(c => c.id === selectedEventCourse.course.id) || selectedEventCourse.course}
+                    position={selectedEventCourse.position}
+                    onUpdate={handleUpdateCourse}
+                    onClose={() => setSelectedEventCourse(null)}
+                  />
+                )}
               </TabsContent>
             </Tabs>
           </>
