@@ -27,6 +27,10 @@ class ExamRuleCreate(BaseModel):
     keyword: str
     categories: List[str]
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 @app.get("/api/courses")
 def get_all_courses(db: Session = Depends(get_db)):
     courses = db.query(Course).filter(Course.category != "Holiday").order_by(Course.date, Course.time_slot).all()
