@@ -10,6 +10,7 @@ import { Toaster, toast } from "sonner";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import dayGridPlugin from "@fullcalendar/daygrid";
+import listPlugin from "@fullcalendar/list";
 import interactionPlugin from "@fullcalendar/interaction";
 import InteractiveTable, { Course } from "@/components/InteractiveTable";
 import CalendarEventModal from "@/components/CalendarEventModal";
@@ -24,7 +25,14 @@ export default function Home() {
   const { theme, setTheme } = useTheme();
   const [focusMode, setFocusMode] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -160,14 +168,22 @@ export default function Home() {
         .dark .fc-button { background-color: #3f3f46 !important; border-color: #52525b !important; color: #f4f4f5 !important; }
         .dark .fc-button:hover { background-color: #52525b !important; }
         .dark .fc-button-active { background-color: #18181b !important; }
+        .dark .fc-list-day-cushion { background: #27272a; }
+        .dark .fc-list-event:hover td { background: #3f3f46; }
+        .dark .fc-list-table td { border-color: #3f3f46; color: #d4d4d8; }
+        @media (max-width: 767px) {
+          .fc-toolbar-title { font-size: 1rem !important; }
+          .fc-button { padding: 0.3rem 0.5rem !important; font-size: 0.75rem !important; }
+          .fc-list-event-title a { font-size: 0.85rem; }
+        }
       `}} />
 
       <div className="max-w-[1400px] mx-auto space-y-8">
 
         <header className="border-b border-zinc-200 dark:border-zinc-700 pb-4 pt-2 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-          <div>
-            <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-100 mb-2">NYCU Med10 戰略儀表板</h1>
-            <p className="text-zinc-500 dark:text-zinc-400 text-lg font-bold flex items-center gap-2"><CalendarIcon className="w-5 h-5" /> 114-2 學期 臨床醫學進度追蹤</p>
+          <div className="min-w-0">
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-100 mb-2 leading-tight">NYCU Med10 戰略儀表板</h1>
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm md:text-lg font-bold flex items-center gap-2"><CalendarIcon className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> 114-2 學期 臨床醫學進度追蹤</p>
           </div>
           <div className="flex items-center gap-3">
             {/* Focus Mode toggle */}
@@ -279,16 +295,20 @@ export default function Home() {
                   focusMode={focusMode}
                 />
               </TabsContent>
-              <TabsContent value="calendar" className="bg-white dark:bg-zinc-800/80 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm mt-0 relative">
+              <TabsContent value="calendar" className="bg-white dark:bg-zinc-800/80 p-3 md:p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm mt-0 relative overflow-hidden">
                 <FullCalendar
-                  plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                  initialView="timeGridWeek"
-                  headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek" }}
+                  plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+                  initialView={isMobile ? "listWeek" : "timeGridWeek"}
+                  headerToolbar={
+                    isMobile
+                      ? { left: "prev,next", center: "title", right: "listWeek,timeGridDay" }
+                      : { left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek" }
+                  }
                   slotMinTime="08:00:00"
                   slotMaxTime="18:00:00"
-                  height={900}
+                  height={isMobile ? "auto" : 900}
                   events={calendarEvents}
-                  expandRows={true}
+                  expandRows={!isMobile}
                   eventClick={(info) => {
                     const course = enrichedCourses.find(c => String(c.id) === info.event.id);
                     if (course) {

@@ -26,13 +26,24 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
     ? "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
     : "bg-zinc-100 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200";
 
-  // Clamp position so modal doesn't overflow viewport
-  const style: React.CSSProperties = {
-    position: "fixed",
-    top: Math.min(position.y, window.innerHeight - 380),
-    left: Math.min(position.x + 12, window.innerWidth - 340),
-    zIndex: 9999,
-  };
+  // On mobile, center the modal; on desktop, anchor near the clicked event
+  const isMobile = window.innerWidth < 768;
+  const style: React.CSSProperties = isMobile
+    ? {
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        zIndex: 9999,
+        width: "calc(100vw - 32px)",
+        maxWidth: 400,
+      }
+    : {
+        position: "fixed",
+        top: Math.min(position.y, window.innerHeight - 380),
+        left: Math.min(position.x + 12, window.innerWidth - 340),
+        zIndex: 9999,
+      };
 
   return (
     <>
@@ -40,7 +51,7 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
       <div className="fixed inset-0 z-[9998]" onClick={onClose} />
 
       {/* Modal */}
-      <div style={style} className="w-[320px] bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div style={style} className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 w-[320px] md:w-[320px]">
         {/* Header */}
         <div className="bg-zinc-50 dark:bg-zinc-900/50 px-4 py-3 flex items-start justify-between gap-2 border-b border-zinc-100 dark:border-zinc-700">
           <div className="min-w-0">
