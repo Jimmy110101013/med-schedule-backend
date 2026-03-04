@@ -48,6 +48,22 @@ export default function Home() {
     });
   }, [enrichedCourses, focusMode, allExams]);
 
+  const focusCalendarEvents = useMemo(() => {
+    if (!focusMode) return calendarEvents;
+    const today = new Date();
+    const nextUpcoming = allExams.find(e => new Date(e.date) >= today) || allExams[0];
+    if (!nextUpcoming) return calendarEvents;
+    return calendarEvents.map(event => {
+      const course = enrichedCourses.find(c => String(c.id) === event.id);
+      const isTarget = course?.category === "Exam" || course?.target_exam === nextUpcoming.topic;
+      if (isTarget) return event;
+      return {
+        ...event,
+        classNames: ["opacity-25", "grayscale", "saturate-0", "transition-all", "duration-300", "hover:opacity-60", "hover:grayscale-0", "hover:saturate-100"],
+      };
+    });
+  }, [calendarEvents, focusMode, allExams, enrichedCourses]);
+
   const { nextExam, blockCourses, daysToExam, blockProgressRate, blockStudied, blockTotal, blockCategoriesIncluded } = useMemo(() => {
     const today = new Date();
     const nextExam = allExams.find(e => new Date(e.date) >= today) || allExams[0];
@@ -197,7 +213,7 @@ export default function Home() {
                   slotMinTime="08:00:00"
                   slotMaxTime="18:00:00"
                   height={isMobile ? "auto" : 900}
-                  events={calendarEvents}
+                  events={focusCalendarEvents}
                   expandRows={!isMobile}
                   eventClick={(info) => {
                     const course = enrichedCourses.find(c => String(c.id) === info.event.id);
