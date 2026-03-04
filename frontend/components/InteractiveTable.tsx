@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Filter, Target, Activity } from "lucide-react";
@@ -169,16 +169,25 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedExam, setSelectedExam] = useState<string>("All");
 
-  const uniqueCategories = ["All", ...Array.from(new Set(courses.map((c) => c.category)))];
-  const uniqueExams = ["All", ...Array.from(new Set(courses.map((c) => c.target_exam).filter(Boolean)))];
+  const uniqueCategories = useMemo(
+    () => ["All", ...Array.from(new Set(courses.map((c) => c.category)))],
+    [courses]
+  );
+  const uniqueExams = useMemo(
+    () => ["All", ...Array.from(new Set(courses.map((c) => c.target_exam).filter(Boolean)))],
+    [courses]
+  );
 
-  const filteredCourses = focusMode
-    ? courses
-    : courses.filter((c) => {
-        const matchCategory = selectedCategory === "All" || c.category === selectedCategory;
-        const matchExam = selectedExam === "All" || c.target_exam === selectedExam;
-        return matchCategory && matchExam;
-      });
+  const filteredCourses = useMemo(
+    () => focusMode
+      ? courses
+      : courses.filter((c) => {
+          const matchCategory = selectedCategory === "All" || c.category === selectedCategory;
+          const matchExam = selectedExam === "All" || c.target_exam === selectedExam;
+          return matchCategory && matchExam;
+        }),
+    [courses, selectedCategory, selectedExam, focusMode]
+  );
 
   const isStudied = (progress: any) => {
     if (!Array.isArray(progress)) return false;

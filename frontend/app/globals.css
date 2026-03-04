@@ -124,3 +124,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* FullCalendar base */
+  .fc-theme-standard td,
+  .fc-theme-standard th { border-color: #e4e4e7; }
+  .fc-timegrid-slot { height: 3.5rem !important; }
+  .fc-event-main { white-space: normal !important; padding: 6px !important; line-height: 1.4; font-size: 0.85rem; font-weight: 600; overflow-y: auto !important; }
+  .fc-v-event { border-radius: 6px; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  /* Table */
+  .table-container table { table-layout: fixed; width: 100%; }
+  .course-truncate { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+
+  /* FullCalendar dark mode */
+  .dark .fc-theme-standard td,
+  .dark .fc-theme-standard th { border-color: #3f3f46; }
+  .dark .fc { background: transparent; }
+  .dark .fc-col-header-cell { background: transparent; }
+  .dark .fc-timegrid-slot-label { color: #a1a1aa; }
+  .dark .fc-col-header-cell-cushion,
+  .dark .fc-daygrid-day-number { color: #d4d4d8; }
+  .dark .fc-toolbar-title { color: #f4f4f5; }
+  .dark .fc-button { background-color: #3f3f46 !important; border-color: #52525b !important; color: #f4f4f5 !important; }
+  .dark .fc-button:hover { background-color: #52525b !important; }
+  .dark .fc-button-active { background-color: #18181b !important; }
+  .dark .fc-list-day-cushion { background: #27272a; }
+  .dark .fc-list-event:hover td { background: #3f3f46; }
+  .dark .fc-list-table td { border-color: #3f3f46; color: #d4d4d8; }
+
+  /* Mobile calendar toolbar */
+  @media (max-width: 767px) {
+    .fc-toolbar-title { font-size: 1rem !important; }
+    .fc-button { padding: 0.3rem 0.5rem !important; font-size: 0.75rem !important; }
+    .fc-list-event-title a { font-size: 0.85rem; }
+  }
+}

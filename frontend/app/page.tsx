@@ -1,31 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useTheme } from "next-themes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar as CalendarIcon, Target, Flame, Activity, Info, Sun, Moon, Zap } from "lucide-react";
-import { Toaster, toast } from "sonner";
+import { Toaster } from "sonner";
 import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import listPlugin from "@fullcalendar/list";
 import interactionPlugin from "@fullcalendar/interaction";
-import InteractiveTable, { Course } from "@/components/InteractiveTable";
+import InteractiveTable from "@/components/InteractiveTable";
+import type { Course } from "@/components/InteractiveTable";
 import CalendarEventModal from "@/components/CalendarEventModal";
+import { useDashboardData, isStudied } from "@/hooks/useDashboardData";
 
-interface ExamRule { id: number; keyword: string; categories: string[]; }
+const EXCLUDED_FROM_FOCUS = ["Exam", "PBL", "Holiday", "國考複習"];
 
 export default function Home() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [rules, setRules] = useState<ExamRule[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { enrichedCourses, allExams, loading, subjectStats, calendarEvents, handleUpdateCourse } = useDashboardData();
   const [selectedEventCourse, setSelectedEventCourse] = useState<{ course: Course; position: { x: number; y: number } } | null>(null);
   const { theme, setTheme } = useTheme();
   const [focusMode, setFocusMode] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => setMounted(true), []);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -34,149 +35,38 @@ export default function Home() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  useEffect(() => {
-    Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/courses`).then(res => res.json()),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules`).then(res => res.json())
-    ]).then(([coursesData, rulesData]) => {
-      setCourses(coursesData);
-      setRules(rulesData);
-      setLoading(false);
-    }).catch(() => toast.error("系統連線異常"));
-  }, []);
+  const focusFilteredCourses = useMemo(() => {
+    if (!focusMode) return enrichedCourses;
+    const today = new Date();
+    return enrichedCourses.filter(course => {
+      if (!course.target_exam) return false;
+      if (EXCLUDED_FROM_FOCUS.includes(course.category)) return false;
+      const exam = allExams.find(e => e.topic === course.target_exam);
+      if (!exam) return false;
+      const days = Math.ceil((new Date(exam.date).getTime() - today.getTime()) / (1000 * 3600 * 24));
+      return days >= 0 && days < 7 && !isStudied(course.study_progress);
+    });
+  }, [enrichedCourses, focusMode, allExams]);
 
-  const handleUpdateCourse = async (courseId: number, updates: Partial<Course>) => {
-    setCourses(prev => prev.map(c => c.id === courseId ? { ...c, ...updates } : c));
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/courses/${courseId}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updates)
-      });
-    } catch { toast.error("儲存失敗"); }
-  };
-
-  const isStudied = (progress: any) => {
-    if (!Array.isArray(progress)) return false;
-    return progress.some(p => ["一刷", "二刷", "寫考古"].includes(p));
-  };
-
-  const today = new Date();
-  const allExams = courses.filter(c => c.category === "Exam").sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-  const getDaysToExam = (targetExam: string): number => {
-    const exam = allExams.find(e => e.topic === targetExam);
-    if (!exam) return Infinity;
-    return Math.ceil((new Date(exam.date).getTime() - today.getTime()) / (1000 * 3600 * 24));
-  };
-
-  const getExamTargetCategories = (examTopic: string, courseTopic: string = ""): string[] => {
-    const lowerExam = examTopic.toLowerCase();
-    const lowerCourse = courseTopic.toLowerCase();
-
-    const isCancerRelated = ["cancer", "tumor", "malignancy", "oncology"].some(k => lowerCourse.includes(k));
-    if (isCancerRelated && (lowerExam.includes("腫瘤") || lowerExam.includes("oncology"))) {
-       for (const rule of rules) {
-         if (rule.keyword.includes("腫瘤") || rule.keyword.toLowerCase().includes("oncology")) {
-           return rule.categories;
-         }
-       }
+  const { nextExam, blockCourses, daysToExam, blockProgressRate, blockStudied, blockTotal, blockCategoriesIncluded } = useMemo(() => {
+    const today = new Date();
+    const nextExam = allExams.find(e => new Date(e.date) >= today) || allExams[0];
+    let blockCourses: Course[] = [];
+    let daysToExam = 0;
+    if (nextExam) {
+      daysToExam = Math.ceil((new Date(nextExam.date).getTime() - today.getTime()) / (1000 * 3600 * 24));
+      blockCourses = enrichedCourses.filter(c => c.target_exam === nextExam.topic && !["Exam", "國考複習", "PBL"].includes(c.category));
     }
-    for (const rule of rules) {
-      if (lowerExam.includes(rule.keyword.toLowerCase())) {
-        return rule.categories;
-      }
-    }
-    return [];
-  };
-
-  const enrichedCourses = courses.map(course => {
-    if (course.target_exam_override) {
-      return { ...course, target_exam: course.target_exam_override };
-    }
-    let target_exam = "";
-    if (!["Exam", "國考複習", "PBL", "Holiday"].includes(course.category)) {
-      const matchedExam = allExams.find(exam => {
-        const isAfter = new Date(exam.date) >= new Date(course.date);
-        const targetCategories = getExamTargetCategories(exam.topic, course.topic);
-        const isIncluded = targetCategories.some(t => t.toLowerCase() === course.category.toLowerCase());
-        return isAfter && isIncluded;
-      });
-      if (matchedExam) target_exam = matchedExam.topic;
-    }
-    return { ...course, target_exam };
-  });
-
-  const EXCLUDED_FROM_FOCUS = ["Exam", "PBL", "Holiday", "國考複習"];
-
-  const focusFilteredCourses = focusMode
-    ? enrichedCourses.filter(course => {
-        if (!course.target_exam) return false;
-        if (EXCLUDED_FROM_FOCUS.includes(course.category)) return false;
-        const days = getDaysToExam(course.target_exam);
-        return days >= 0 && days < 7 && !isStudied(course.study_progress);
-      })
-    : enrichedCourses;
-
-  let nextExam = allExams.find(e => new Date(e.date) >= today) || allExams[0];
-  let blockCourses: Course[] = [];
-  let daysToExam = 0;
-
-  if (nextExam) {
-    const nextExamDate = new Date(nextExam.date);
-    daysToExam = Math.ceil((nextExamDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
-    blockCourses = enrichedCourses.filter(c => c.target_exam === nextExam?.topic && !["Exam", "國考複習", "PBL"].includes(c.category));
-  }
-
-  const blockTotal = blockCourses.length;
-  const blockStudied = blockCourses.filter(c => isStudied(c.study_progress)).length;
-  const blockProgressRate = blockTotal > 0 ? (blockStudied / blockTotal) * 100 : 0;
-  const blockCategoriesIncluded = Array.from(new Set(blockCourses.map(c => c.category))).join("、");
-
-  const subjectStats = Array.from(new Set(courses.map(c => c.category)))
-    .filter(cat => !["Exam", "國考複習", "PBL", "Skill"].includes(cat))
-    .map(category => {
-      const catCourses = courses.filter(c => c.category === category);
-      const total = catCourses.length;
-      return { category, total, studied: catCourses.filter(c => isStudied(c.study_progress)).length, rate: total > 0 ? (catCourses.filter(c => isStudied(c.study_progress)).length / total) * 100 : 0 };
-    }).sort((a, b) => b.total - a.total);
-
-  const calendarEvents = enrichedCourses.map(course => {
-    const [startT, endT] = course.time_slot.split("-");
-    let bgColor = "#ef4444";
-    if (course.category === "Exam") bgColor = "#000000";
-    else if (course.category === "PBL") bgColor = "#a855f7";
-    else if (isStudied(course.study_progress)) bgColor = "#22c55e";
-    else if (["現場出席", "錄影補課"].includes(course.attendance)) bgColor = "#3b82f6";
-    return { id: String(course.id), title: `[${course.category}] ${course.topic}`, start: `${course.date}T${startT}`, end: `${course.date}T${endT}`, backgroundColor: bgColor, borderColor: bgColor, textColor: "#ffffff" };
-  });
+    const blockTotal = blockCourses.length;
+    const blockStudied = blockCourses.filter(c => isStudied(c.study_progress)).length;
+    const blockProgressRate = blockTotal > 0 ? (blockStudied / blockTotal) * 100 : 0;
+    const blockCategoriesIncluded = Array.from(new Set(blockCourses.map(c => c.category))).join("、");
+    return { nextExam, blockCourses, daysToExam, blockProgressRate, blockStudied, blockTotal, blockCategoriesIncluded };
+  }, [enrichedCourses, allExams]);
 
   return (
     <main className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950 p-4 md:p-8 text-zinc-900 dark:text-zinc-100 font-sans text-sm md:text-base">
       <Toaster position="bottom-right" />
-      <style dangerouslySetInnerHTML={{__html: `
-        .fc-theme-standard td, .fc-theme-standard th { border-color: #e4e4e7; }
-        .fc-timegrid-slot { height: 3.5rem !important; }
-        .fc-event-main { white-space: normal !important; padding: 6px !important; line-height: 1.4; font-size: 0.85rem; font-weight: 600; overflow-y: auto !important; }
-        .fc-v-event { border-radius: 6px; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .table-container table { table-layout: fixed; width: 100%; }
-        .course-truncate { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-        .dark .fc-theme-standard td, .dark .fc-theme-standard th { border-color: #3f3f46; }
-        .dark .fc { background: transparent; }
-        .dark .fc-col-header-cell { background: transparent; }
-        .dark .fc-timegrid-slot-label { color: #a1a1aa; }
-        .dark .fc-col-header-cell-cushion, .dark .fc-daygrid-day-number { color: #d4d4d8; }
-        .dark .fc-toolbar-title { color: #f4f4f5; }
-        .dark .fc-button { background-color: #3f3f46 !important; border-color: #52525b !important; color: #f4f4f5 !important; }
-        .dark .fc-button:hover { background-color: #52525b !important; }
-        .dark .fc-button-active { background-color: #18181b !important; }
-        .dark .fc-list-day-cushion { background: #27272a; }
-        .dark .fc-list-event:hover td { background: #3f3f46; }
-        .dark .fc-list-table td { border-color: #3f3f46; color: #d4d4d8; }
-        @media (max-width: 767px) {
-          .fc-toolbar-title { font-size: 1rem !important; }
-          .fc-button { padding: 0.3rem 0.5rem !important; font-size: 0.75rem !important; }
-          .fc-list-event-title a { font-size: 0.85rem; }
-        }
-      `}} />
 
       <div className="max-w-[1400px] mx-auto space-y-8">
 
