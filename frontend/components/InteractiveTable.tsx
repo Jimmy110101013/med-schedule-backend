@@ -212,8 +212,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
     <div className="space-y-4">
       {/* Filter bar — hidden in focus mode */}
       {!focusMode && (
-        <div className="flex flex-col gap-3 bg-zinc-50/80 dark:bg-zinc-900/50 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 bg-zinc-50/80 dark:bg-zinc-900/50 p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-zinc-500 shrink-0" />
               <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300 shrink-0">科目：</span>
@@ -245,9 +244,8 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
                 ))}
               </select>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3 bg-white dark:bg-zinc-800 px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm self-start">
+          <div className="flex items-center gap-3 bg-white dark:bg-zinc-800 px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm sm:ml-auto">
             <Activity className="w-4 h-4 text-green-500" />
             <span className="text-sm font-bold text-zinc-600 dark:text-zinc-300">
               共 <span className="text-zinc-900 dark:text-zinc-100">{totalFiltered}</span> 堂
