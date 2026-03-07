@@ -42,7 +42,7 @@ def get_all_courses(db: Session = Depends(get_db)):
     for c in courses:
         try:
             progress_list = json.loads(c.study_progress) if c.study_progress else []
-        except:
+        except (json.JSONDecodeError, TypeError):
             progress_list = []
         result.append({
             "id": c.id, "date": c.date, "time_slot": c.time_slot, "category": c.category,
@@ -72,7 +72,7 @@ def get_exam_rules(db: Session = Depends(get_db)):
     res = []
     for r in rules:
         try: cats = json.loads(r.target_categories)
-        except: cats = []
+        except (json.JSONDecodeError, TypeError): cats = []
         res.append({"id": r.id, "keyword": r.exam_keyword, "categories": cats})
     return res
 
@@ -94,7 +94,8 @@ def update_exam_rule(rule_id: int, rule_data: ExamRuleCreate, db: Session = Depe
 @app.delete("/api/exam-rules/{rule_id}")
 def delete_exam_rule(rule_id: int, db: Session = Depends(get_db)):
     rule = db.query(ExamRule).filter(ExamRule.id == rule_id).first()
-    if rule:
-        db.delete(rule)
-        db.commit()
+    if not rule:
+        raise HTTPException(status_code=404, detail="Rule not found")
+    db.delete(rule)
+    db.commit()
     return {"status": "success"}

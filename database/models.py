@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, Integer, String, Text, Index
 from database.db_setup import Base
 
 class Course(Base):
@@ -17,6 +17,10 @@ class Course(Base):
     
     # 手動指定的考試名稱
     target_exam_override = Column(String, nullable=True)
+
+    __table_args__ = (
+        Index("ix_course_date_time_slot", "date", "time_slot"),
+    )
 
 class ExamRule(Base):
     __tablename__ = 'exam_rules'
