@@ -9,8 +9,6 @@ import json
 from database.db_setup import SessionLocal, engine, Base
 from database.models import Course, ExamRule
 
-Base.metadata.create_all(bind=engine)
-
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
