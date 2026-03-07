@@ -1,6 +1,8 @@
+import { useCallback } from "react";
 import { Course } from "./InteractiveTable";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import { ATTENDANCE_OPTIONS, PROGRESS_TYPES } from "@/lib/constants";
 
 interface CalendarEventModalProps {
   course: Course;
@@ -10,7 +12,7 @@ interface CalendarEventModalProps {
 }
 
 export default function CalendarEventModal({ course, position, onUpdate, onClose }: CalendarEventModalProps) {
-  const handleProgressToggle = (type: string, checked: boolean) => {
+  const handleProgressToggle = useCallback((type: string, checked: boolean) => {
     let newProgress = Array.isArray(course.study_progress) ? [...course.study_progress] : [];
     if (checked) {
       if (!newProgress.includes(type)) newProgress.push(type);
@@ -18,7 +20,7 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
       newProgress = newProgress.filter(p => p !== type);
     }
     onUpdate(course.id, { study_progress: newProgress });
-  };
+  }, [course, onUpdate]);
 
   const categoryColor = course.category === "Exam"
     ? "border-zinc-800 bg-zinc-800 text-white"
@@ -77,10 +79,7 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
               onChange={(e) => onUpdate(course.id, { attendance: e.target.value })}
               className="w-full bg-white dark:bg-zinc-700 border-2 border-zinc-200 dark:border-zinc-600 text-sm font-medium rounded-lg px-3 py-2 focus:ring-2 focus:ring-zinc-900 outline-none cursor-pointer text-zinc-800 dark:text-zinc-200"
             >
-              <option value="未標記">未標記</option>
-              <option value="現場出席">現場出席</option>
-              <option value="錄影補課">錄影補課</option>
-              <option value="加強複習">加強複習</option>
+              {ATTENDANCE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
           </div>
 
@@ -88,7 +87,7 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
           <div>
             <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-2 block">內化進度</label>
             <div className="flex items-center gap-4">
-              {["一刷", "二刷", "寫考古"].map(type => {
+              {PROGRESS_TYPES.map(type => {
                 const checked = Array.isArray(course.study_progress) && course.study_progress.includes(type);
                 return (
                   <label key={type} className={`flex items-center gap-1.5 text-sm cursor-pointer transition-colors ${checked ? "text-green-700 dark:text-green-400 font-extrabold" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 font-bold"}`}>

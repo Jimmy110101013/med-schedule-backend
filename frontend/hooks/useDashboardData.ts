@@ -3,13 +3,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import type { Course } from "@/components/InteractiveTable";
+import { isStudied, PROGRESS_TYPES, EXCLUDED_FROM_FOCUS } from "@/lib/constants";
 
+export { isStudied };
 export interface ExamRule { id: number; keyword: string; categories: string[]; }
-
-export const isStudied = (progress: any): boolean => {
-  if (!Array.isArray(progress)) return false;
-  return progress.some(p => ["一刷", "二刷", "寫考古"].includes(p));
-};
 
 const getExamTargetCategories = (examTopic: string, courseTopic: string = "", rules: ExamRule[]): string[] => {
   const lowerExam = examTopic.toLowerCase();
@@ -65,7 +62,7 @@ export function useDashboardData() {
       return { ...course, target_exam: course.target_exam_override };
     }
     let target_exam = "";
-    if (!["Exam", "國考複習", "PBL", "Holiday"].includes(course.category)) {
+    if (!EXCLUDED_FROM_FOCUS.includes(course.category)) {
       const matchedExam = allExams.find(exam => {
         const isAfter = new Date(exam.date) >= new Date(course.date);
         const targetCategories = getExamTargetCategories(exam.topic, course.topic, rules);

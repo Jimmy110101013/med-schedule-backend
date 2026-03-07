@@ -1,4 +1,6 @@
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
+import { ATTENDANCE_OPTIONS, PROGRESS_TYPES, isStudied } from "@/lib/constants";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Filter, Target, Activity } from "lucide-react";
@@ -23,19 +25,6 @@ interface InteractiveTableProps {
   focusMode?: boolean;
 }
 
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-  return isMobile;
-}
-
-const ATTENDANCE_OPTIONS = ["未標記", "現場出席", "錄影補課", "加強複習"];
-const PROGRESS_TYPES = ["一刷", "二刷", "寫考古"];
 
 function CategoryBadge({ category }: { category: string }) {
   return (
@@ -55,7 +44,7 @@ function CategoryBadge({ category }: { category: string }) {
   );
 }
 
-function ProgressCheckboxes({
+const ProgressCheckboxes = memo(function ProgressCheckboxes({
   course,
   onToggle,
 }: {
@@ -87,9 +76,9 @@ function ProgressCheckboxes({
       })}
     </div>
   );
-}
+});
 
-function CourseCard({
+const CourseCard = memo(function CourseCard({
   course,
   allExams,
   onUpdateCourse,
@@ -100,12 +89,12 @@ function CourseCard({
   onUpdateCourse: (id: number, updates: Partial<Course>) => void;
   onToggle: (course: Course, type: string, checked: boolean) => void;
 }) {
-  const isStudied = Array.isArray(course.study_progress) && course.study_progress.some((p) => PROGRESS_TYPES.includes(p));
+  const courseIsStudied = isStudied(course.study_progress);
 
   return (
     <div
       className={`rounded-xl border p-4 space-y-3 bg-white dark:bg-zinc-900 shadow-sm ${
-        isStudied
+        courseIsStudied
           ? "border-green-200 dark:border-green-800"
           : "border-zinc-200 dark:border-zinc-700"
       }`}
@@ -162,7 +151,7 @@ function CourseCard({
       <ProgressCheckboxes course={course} onToggle={onToggle} />
     </div>
   );
-}
+});
 
 export default function InteractiveTable({ courses, allExams, onUpdateCourse, focusMode }: InteractiveTableProps) {
   const isMobile = useIsMobile();
@@ -188,11 +177,6 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
         }),
     [courses, selectedCategory, selectedExam, focusMode]
   );
-
-  const isStudied = (progress: any) => {
-    if (!Array.isArray(progress)) return false;
-    return progress.some((p) => PROGRESS_TYPES.includes(p));
-  };
 
   const totalFiltered = filteredCourses.length;
   const studiedFiltered = filteredCourses.filter((c) => isStudied(c.study_progress)).length;
