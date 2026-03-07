@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
@@ -27,9 +28,14 @@ class ExamRuleCreate(BaseModel):
     keyword: str
     categories: List[str]
 
-@app.api_route("/health", methods=["GET", "HEAD"])
-def health_check():
-    return {"status": "ok"}
+@app.get("/health")
+@app.head("/health")
+def health_check(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+        return {"status": "alive", "database": "awake"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @app.get("/api/courses")
 def get_all_courses(db: Session = Depends(get_db)):
