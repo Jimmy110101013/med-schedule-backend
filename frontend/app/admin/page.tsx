@@ -14,6 +14,8 @@ export default function AdminDashboard() {
   const [newKeyword, setNewKeyword] = useState("");
   const [newCategories, setNewCategories] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
 
   const fetchRules = () => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules`).then(res => res.json()).then(data => setRules(data));
@@ -28,6 +30,7 @@ export default function AdminDashboard() {
     const url = isEdit ? `${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules/${id}` : `${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules`;
     const method = isEdit ? "PUT" : "POST";
 
+    setIsSaving(true);
     try {
       const res = await fetch(url, {
         method, headers: { "Content-Type": "application/json" },
@@ -39,20 +42,23 @@ export default function AdminDashboard() {
         fetchRules();
       } else { toast.error("儲存失敗"); }
     } catch { toast.error("伺服器連線異常"); }
+    finally { setIsSaving(false); }
   };
 
   const startEdit = (rule: ExamRule) => {
     setEditingId(rule.id);
     setNewKeyword(rule.keyword);
-    setNewCategories(rule.categories.join(", "));
+    setNewCategories(rule.categories.join("; "));
   };
 
   const handleDeleteRule = async (ruleId: number) => {
     if (!confirm("確定要刪除這條規則嗎？")) return;
+    setIsDeleting(ruleId);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules/${ruleId}`, { method: "DELETE" });
       if (res.ok) { toast.success("規則已刪除"); fetchRules(); }
     } catch { toast.error("伺服器連線異常"); }
+    finally { setIsDeleting(null); }
   };
 
   return (
@@ -76,11 +82,11 @@ export default function AdminDashboard() {
             <input type="text" placeholder="涵蓋科目 (逗號分隔，例: Orthopedics)" value={newCategories} onChange={e => setNewCategories(e.target.value)} className="border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 rounded-md px-3 py-2 flex-1 text-sm font-medium" />
             {editingId ? (
               <div className="flex gap-2">
-                <button onClick={() => handleSave(editingId)} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"><Check className="w-4 h-4" /></button>
+                <button onClick={() => handleSave(editingId)} disabled={isSaving} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"><Check className="w-4 h-4" /></button>
                 <button onClick={() => { setEditingId(null); setNewKeyword(""); setNewCategories(""); }} className="bg-zinc-400 text-white px-4 py-2 rounded-md hover:bg-zinc-500"><X className="w-4 h-4" /></button>
               </div>
             ) : (
-              <button onClick={() => handleSave()} className="bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 text-white px-4 py-2 rounded-md flex items-center gap-1 text-sm"><Plus className="w-4 h-4" /> 新增</button>
+              <button onClick={() => handleSave()} disabled={isSaving} className="bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 text-white px-4 py-2 rounded-md flex items-center gap-1 text-sm disabled:opacity-50 disabled:cursor-not-allowed"><Plus className="w-4 h-4" /> {isSaving ? "儲存中..." : "新增"}</button>
             )}
           </CardContent>
         </Card>
@@ -96,7 +102,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => startEdit(rule)} className="p-2 text-zinc-400 hover:text-blue-600 bg-zinc-50 dark:bg-zinc-700 rounded-md"><Edit2 className="w-4 h-4" /></button>
-                  <button onClick={() => handleDeleteRule(rule.id!)} className="p-2 text-zinc-400 hover:text-red-600 bg-red-50 dark:bg-red-950/30 rounded-md"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={() => handleDeleteRule(rule.id!)} disabled={isDeleting === rule.id} className="p-2 text-zinc-400 hover:text-red-600 bg-red-50 dark:bg-red-950/30 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
             ))}

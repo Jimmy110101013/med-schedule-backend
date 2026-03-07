@@ -16,8 +16,8 @@ import InteractiveTable from "@/components/InteractiveTable";
 import type { Course } from "@/components/InteractiveTable";
 import CalendarEventModal from "@/components/CalendarEventModal";
 import { useDashboardData, isStudied } from "@/hooks/useDashboardData";
-
-const EXCLUDED_FROM_FOCUS = ["Exam", "PBL", "Holiday", "國考複習"];
+import { EXCLUDED_FROM_FOCUS } from "@/lib/constants";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export default function Home() {
   const { enrichedCourses, allExams, loading, subjectStats, calendarEvents, handleUpdateCourse } = useDashboardData();
@@ -25,15 +25,9 @@ export default function Home() {
   const { theme, setTheme } = useTheme();
   const [focusMode, setFocusMode] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => setMounted(true), []);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
   const focusFilteredCourses = useMemo(() => {
     if (!focusMode) return enrichedCourses;
@@ -138,7 +132,7 @@ export default function Home() {
               <Card className="shadow-sm border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/80 p-1">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between">
                   <CardTitle className="text-base font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-2"><Flame className="w-5 h-5 text-orange-500" /> 下一場區段考倒數</CardTitle>
-                  <Badge variant="outline" className="bg-orange-50 text-orange-700 border-none font-bold text-sm px-3 py-1">{nextExam?.date || "未知"}</Badge>
+                  <Badge variant="outline" className="bg-orange-50 text-orange-700 border-none font-bold text-sm px-3 py-1">{nextExam ? new Date(nextExam.date + "T00:00:00").toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric" }) : "未知"}</Badge>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-baseline gap-2">
