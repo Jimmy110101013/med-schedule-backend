@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { Course } from "./InteractiveTable";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
@@ -12,6 +12,25 @@ interface CalendarEventModalProps {
 }
 
 export default function CalendarEventModal({ course, position, onUpdate, onClose }: CalendarEventModalProps) {
+  const [localNotes, setLocalNotes] = useState(course.notes || "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setLocalNotes(course.notes || "");
+  }, [course.id]);
+
+  const handleNotesChange = useCallback((value: string) => {
+    setLocalNotes(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      onUpdate(course.id, { notes: value });
+    }, 500);
+  }, [course.id, onUpdate]);
+
+  useEffect(() => {
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, []);
+
   const handleProgressToggle = useCallback((type: string, checked: boolean) => {
     let newProgress = Array.isArray(course.study_progress) ? [...course.study_progress] : [];
     if (checked) {
@@ -70,7 +89,7 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
         </div>
 
         {/* Body */}
-        <div className="px-4 py-3 space-y-4">
+        <div className="px-4 py-3 space-y-4 max-h-[60vh] overflow-y-auto">
           {/* Attendance */}
           <div>
             <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5 block">出席狀態</label>
@@ -110,6 +129,18 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
               🎯 {course.target_exam}
             </div>
           )}
+
+          {/* Notes */}
+          <div>
+            <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5 block">考點筆記</label>
+            <textarea
+              value={localNotes}
+              onChange={(e) => handleNotesChange(e.target.value)}
+              placeholder="記錄考試重點…"
+              rows={3}
+              className="w-full bg-white dark:bg-zinc-700 border-2 border-zinc-200 dark:border-zinc-600 text-sm font-medium rounded-lg px-3 py-2 focus:ring-2 focus:ring-zinc-900 outline-none resize-y text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
+            />
+          </div>
         </div>
       </div>
     </>

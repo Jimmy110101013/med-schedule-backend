@@ -21,6 +21,7 @@ class CourseUpdate(BaseModel):
     attendance: Optional[str] = None
     study_progress: Optional[List[str]] = None
     target_exam_override: Optional[str] = None
+    notes: Optional[str] = None
 
 class ExamRuleCreate(BaseModel):
     keyword: str
@@ -48,7 +49,8 @@ def get_all_courses(db: Session = Depends(get_db)):
             "id": c.id, "date": c.date, "time_slot": c.time_slot, "category": c.category,
             "topic": c.topic, "teacher": c.teacher, "attendance": c.attendance,
             "study_progress": progress_list,
-            "target_exam_override": c.target_exam_override # 傳回手動值
+            "target_exam_override": c.target_exam_override, # 傳回手動值
+            "notes": c.notes or ""
         })
     return result
 
@@ -62,6 +64,8 @@ def update_course(course_id: int, course_data: CourseUpdate, db: Session = Depen
         course.study_progress = json.dumps(course_data.study_progress, ensure_ascii=False)
     if course_data.target_exam_override is not None:
         course.target_exam_override = course_data.target_exam_override
+    if course_data.notes is not None:
+        course.notes = course_data.notes
     
     db.commit()
     return {"status": "success"}

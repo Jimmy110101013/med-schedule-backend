@@ -17,6 +17,7 @@ class Course(Base):
     
     # 手動指定的考試名稱
     target_exam_override = Column(String, nullable=True)
+    notes = Column(Text, nullable=True)
 
     __table_args__ = (
         Index("ix_course_date_time_slot", "date", "time_slot"),
