@@ -87,11 +87,11 @@ export function useDashboardData() {
 
   const calendarEvents = useMemo(() => enrichedCourses.map(course => {
     const [startT, endT] = course.time_slot.split("-");
-    let bgColor = "#ef4444";
-    if (course.category === "Exam") bgColor = "#000000";
-    else if (course.category === "PBL") bgColor = "#a855f7";
-    else if (isStudied(course.study_progress)) bgColor = "#22c55e";
-    else if (["現場出席", "錄影補課"].includes(course.attendance)) bgColor = "#3b82f6";
+    let bgColor = "var(--fc-default)";
+    if (course.category === "Exam") bgColor = "var(--fc-exam)";
+    else if (course.category === "PBL") bgColor = "var(--fc-pbl)";
+    else if (isStudied(course.study_progress)) bgColor = "var(--fc-studied)";
+    else if (["現場出席", "錄影補課"].includes(course.attendance)) bgColor = "var(--fc-attended)";
     return { id: String(course.id), title: `[${course.category}] ${course.topic}`, start: `${course.date}T${startT}`, end: `${course.date}T${endT}`, backgroundColor: bgColor, borderColor: bgColor, textColor: "#ffffff" };
   }), [enrichedCourses]);
 

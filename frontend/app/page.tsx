@@ -75,15 +75,15 @@ export default function Home() {
   }, [enrichedCourses, allExams]);
 
   return (
-    <main className="min-h-screen p-4 md:p-8 text-zinc-900 dark:text-zinc-100 font-sans text-sm md:text-base">
+    <main className="min-h-screen p-4 md:p-8 text-foreground font-sans text-sm md:text-base">
       <Toaster position="bottom-right" />
 
       <div className="max-w-[1400px] mx-auto space-y-8">
 
-        <header className="border-b border-zinc-200 dark:border-zinc-700 pb-4 pt-2 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <header className="border-b border-border pb-4 pt-2 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-100 mb-2 leading-tight">NYCU Med10 戰略儀表板</h1>
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm md:text-lg font-bold flex items-center gap-2"><CalendarIcon className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> 114-2 學期 臨床醫學進度追蹤</p>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight text-foreground mb-2 leading-tight">NYCU Med10 戰略儀表板</h1>
+            <p className="text-muted-foreground text-sm md:text-lg font-bold flex items-center gap-2"><CalendarIcon className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> 114-2 學期 臨床醫學進度追蹤</p>
           </div>
           <div className="flex items-center gap-3">
             {/* Focus Mode toggle */}
@@ -92,7 +92,7 @@ export default function Home() {
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 font-bold text-sm transition-all ${
                 focusMode
                   ? "bg-orange-500 text-white border-orange-500 shadow-lg"
-                  : "glass text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-600 hover:border-orange-300"
+                  : "glass text-foreground border-border hover:border-orange-300"
               }`}
             >
               <Zap className="w-4 h-4" />
@@ -101,15 +101,15 @@ export default function Home() {
             {/* Dark mode toggle */}
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2.5 rounded-xl glass border-2 border-zinc-200 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-400 transition-colors"
+              className="p-2.5 rounded-xl glass border-2 border-border hover:border-muted-foreground transition-colors"
               aria-label="Toggle dark mode"
             >
-              {mounted ? (theme === "dark" ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-zinc-600" />) : <Moon className="w-5 h-5 text-zinc-600" />}
+              {mounted ? (theme === "dark" ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-muted-foreground" />) : <Moon className="w-5 h-5 text-muted-foreground" />}
             </button>
           </div>
         </header>
 
-        {loading ? <div className="flex justify-center items-center h-64 text-zinc-400 font-bold text-lg">系統核心啟動中...</div> : (
+        {loading ? <div className="flex justify-center items-center h-64 text-muted-foreground font-bold text-lg">系統核心啟動中...</div> : (
           <>
             {/* Focus Mode banner */}
             {focusMode && (
@@ -129,50 +129,50 @@ export default function Home() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="shadow-mac border-zinc-200/60 dark:border-zinc-700/60 glass-heavy p-1">
+              <Card className="shadow-mac border-border/60 glass-heavy p-1">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                  <CardTitle className="text-base font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-2"><Flame className="w-5 h-5 text-orange-500" /> 下一場區段考倒數</CardTitle>
+                  <CardTitle className="text-base font-bold text-muted-foreground flex items-center gap-2"><Flame className="w-5 h-5 text-orange-500" /> 下一場區段考倒數</CardTitle>
                   <Badge variant="outline" className="bg-orange-50 text-orange-700 border-none font-bold text-sm px-3 py-1">{nextExam ? new Date(nextExam.date + "T00:00:00").toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric" }) : "未知"}</Badge>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-6xl font-black text-zinc-900 dark:text-zinc-100">{daysToExam > 0 ? daysToExam : 0}</span>
-                    <span className="text-xl text-zinc-500 dark:text-zinc-400 font-bold">天</span>
+                    <span className="text-6xl font-black text-foreground">{daysToExam > 0 ? daysToExam : 0}</span>
+                    <span className="text-xl text-muted-foreground font-bold">天</span>
                   </div>
-                  <p className="text-base text-zinc-500 dark:text-zinc-400 mt-3 font-bold truncate">目標：{nextExam?.topic || "尚未排定"}</p>
+                  <p className="text-base text-muted-foreground mt-3 font-bold truncate">目標：{nextExam?.topic || "尚未排定"}</p>
                 </CardContent>
               </Card>
 
-              <Card className="shadow-mac border-zinc-200/60 dark:border-zinc-700/60 glass-heavy overflow-hidden p-1">
+              <Card className="shadow-mac border-border/60 glass-heavy overflow-hidden p-1">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                  <CardTitle className="text-base font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-2"><Target className="w-5 h-5 text-green-600" /> 該考區精準內化率</CardTitle>
+                  <CardTitle className="text-base font-bold text-muted-foreground flex items-center gap-2"><Target className="w-5 h-5 text-green-600" /> 該考區精準內化率</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-black text-zinc-900 dark:text-zinc-100">{blockProgressRate.toFixed(1)} <span className="text-2xl text-zinc-400 dark:text-zinc-500 font-bold">%</span></div>
-                  <div className="flex items-center justify-between mt-4 text-sm font-bold text-zinc-500 dark:text-zinc-400 mb-2">
-                    <span>已掌握 <span className="text-zinc-800 dark:text-zinc-200">{blockStudied}</span> 堂</span>
-                    <span>範圍總計 <span className="text-zinc-800 dark:text-zinc-200">{blockTotal}</span> 堂</span>
+                  <div className="text-4xl font-black text-foreground">{blockProgressRate.toFixed(1)} <span className="text-2xl text-muted-foreground font-bold">%</span></div>
+                  <div className="flex items-center justify-between mt-4 text-sm font-bold text-muted-foreground mb-2">
+                    <span>已掌握 <span className="text-foreground">{blockStudied}</span> 堂</span>
+                    <span>範圍總計 <span className="text-foreground">{blockTotal}</span> 堂</span>
                   </div>
-                  <div className="w-full bg-zinc-100 dark:bg-zinc-700 h-2.5 rounded-full overflow-hidden mb-3">
+                  <div className="w-full bg-muted h-2.5 rounded-full overflow-hidden mb-3">
                     <div className="bg-green-500 h-full transition-all duration-1000 ease-out" style={{ width: `${blockProgressRate}%` }} />
                   </div>
-                  <div className="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-700/50 p-2.5 rounded-lg flex items-start gap-2 border border-zinc-100 dark:border-zinc-600 font-medium">
+                  <div className="text-xs text-muted-foreground bg-muted/50 p-2.5 rounded-lg flex items-start gap-2 border border-border font-medium">
                     <Info className="w-4 h-4 mt-0.5 shrink-0" /><span className="leading-relaxed">範圍涵蓋：{blockCategoriesIncluded || "無"}</span>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="glass-heavy p-6 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 shadow-mac">
-              <h3 className="text-lg font-black text-zinc-800 dark:text-zinc-100 mb-5 flex items-center gap-2"><Activity className="w-5 h-5 text-blue-500" /> 各科目獨立進度追蹤</h3>
+            <div className="glass-heavy p-6 rounded-2xl border border-border/60 shadow-mac">
+              <h3 className="text-lg font-black text-foreground mb-5 flex items-center gap-2"><Activity className="w-5 h-5 text-blue-500" /> 各科目獨立進度追蹤</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-5">
                 {subjectStats.slice(0, 16).map(stat => (
                   <div key={stat.category} className="space-y-2">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="font-bold text-zinc-700 dark:text-zinc-300 truncate pr-2" title={stat.category}>{stat.category}</span>
-                      <span className="text-zinc-500 dark:text-zinc-400 font-mono text-xs font-bold">{stat.studied}/{stat.total}</span>
+                      <span className="font-bold text-foreground/80 truncate pr-2" title={stat.category}>{stat.category}</span>
+                      <span className="text-muted-foreground font-mono text-xs font-bold">{stat.studied}/{stat.total}</span>
                     </div>
-                    <div className="w-full bg-zinc-100 dark:bg-zinc-700 h-1.5 rounded-full overflow-hidden">
+                    <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
                       <div className="bg-blue-500 h-full transition-all duration-500" style={{ width: `${stat.rate}%` }} />
                     </div>
                   </div>
@@ -187,7 +187,7 @@ export default function Home() {
                   <TabsTrigger value="calendar" className="font-bold text-sm px-5 py-1.5">📅 戰略週曆</TabsTrigger>
                 </TabsList>
               </div>
-              <TabsContent value="list" className="glass-heavy border border-zinc-200/60 dark:border-zinc-700/60 rounded-2xl shadow-mac mt-0 p-5 table-container">
+              <TabsContent value="list" className="glass-heavy border border-border/60 rounded-2xl shadow-mac mt-0 p-5 table-container">
                 <InteractiveTable
                   courses={focusFilteredCourses}
                   allExams={allExams}
@@ -195,7 +195,7 @@ export default function Home() {
                   focusMode={focusMode}
                 />
               </TabsContent>
-              <TabsContent value="calendar" className="glass-heavy p-3 md:p-6 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 shadow-mac mt-0 relative overflow-hidden">
+              <TabsContent value="calendar" className="glass-heavy p-4 md:p-8 rounded-3xl border border-border/60 shadow-mac mt-0 relative overflow-hidden">
                 <FullCalendar
                   plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
                   initialView={isMobile ? "listWeek" : "timeGridWeek"}
