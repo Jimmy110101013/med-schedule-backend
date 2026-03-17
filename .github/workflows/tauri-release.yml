@@ -1,0 +1,48 @@
+name: Tauri Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install frontend deps
+        run: cd frontend && npm ci
+
+      - name: Build PDF parser sidecar
+        run: |
+          pip install pdfplumber pyinstaller
+          pyinstaller --onefile --name pdf-parser \
+            --paths . \
+            --hidden-import parser \
+            --hidden-import parser.pdf_reader \
+            --hidden-import parser.text_extractor \
+            --distpath src-tauri/binaries \
+            src-tauri/sidecar/pdf_import.py
+          mv src-tauri/binaries/pdf-parser src-tauri/binaries/pdf-parser-aarch64-apple-darwin
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: src-tauri
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Med Schedule Tracker ${{ github.ref_name }}'
+          releaseBody: 'Desktop app release'
+          releaseDraft: true
