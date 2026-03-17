@@ -163,10 +163,8 @@
   }
 }
 
-@layer utilities {
-  .bg-dot-pattern {
-    background-image: radial-gradient(var(--pattern-color) 1px, transparent 1px);
-    background-size: 24px 24px;
-    background-position: center center;
-  }
+@utility bg-dot-pattern {
+  background-image: radial-gradient(var(--pattern-color) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: center center;
 }
