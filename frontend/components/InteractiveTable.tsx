@@ -34,10 +34,10 @@ function CategoryBadge({ category }: { category: string }) {
       title={category}
       className={`text-xs px-2 py-0.5 font-bold max-w-[130px] truncate inline-block align-middle ${
         category === "Exam"
-          ? "border-zinc-800 bg-zinc-800 text-white"
+          ? "border-foreground bg-foreground text-background"
           : category === "PBL"
           ? "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-          : "bg-zinc-100 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200"
+          : "bg-muted text-foreground"
       }`}
     >
       {category}
@@ -62,14 +62,14 @@ const ProgressCheckboxes = memo(function ProgressCheckboxes({
             className={`flex items-center gap-1.5 text-sm cursor-pointer transition-colors ${
               checked
                 ? "text-green-700 dark:text-green-400 font-extrabold"
-                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 font-bold"
+                : "text-muted-foreground hover:text-foreground font-bold"
             }`}
           >
             <input
               type="checkbox"
               checked={checked}
               onChange={(e) => onToggle(course, type, e.target.checked)}
-              className="w-5 h-5 rounded border-2 border-zinc-300 text-green-600 focus:ring-green-600 cursor-pointer accent-green-600"
+              className="w-5 h-5 rounded border-2 border-border text-green-600 focus:ring-green-600 cursor-pointer accent-green-600"
             />
             {type}
           </label>
@@ -97,21 +97,21 @@ const CourseCard = memo(function CourseCard({
       className={`rounded-xl border p-4 space-y-3 glass-heavy shadow-mac ${
         courseIsStudied
           ? "border-green-200 dark:border-green-800"
-          : "border-zinc-200 dark:border-zinc-700"
+          : "border-border"
       }`}
     >
       {/* Header row */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 font-semibold">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground font-semibold">
           <span>{course.date}</span>
-          <span className="text-zinc-300 dark:text-zinc-600">·</span>
+          <span className="text-muted-foreground/50">·</span>
           <span>{course.time_slot}</span>
         </div>
         <CategoryBadge category={course.category} />
       </div>
 
       {/* Topic */}
-      <p className="font-bold text-zinc-900 dark:text-zinc-100 text-base leading-snug">
+      <p className="font-bold text-foreground text-base leading-snug">
         {course.topic}
       </p>
 
@@ -139,7 +139,7 @@ const CourseCard = memo(function CourseCard({
       <select
         value={course.attendance}
         onChange={(e) => onUpdateCourse(course.id, { attendance: e.target.value })}
-        className="w-full bg-white dark:bg-zinc-700 border-2 border-zinc-200 dark:border-zinc-600 text-sm font-medium rounded-lg px-3 py-2 focus:ring-2 focus:ring-zinc-900 outline-none cursor-pointer text-zinc-800 dark:text-zinc-200"
+        className="w-full bg-card border-2 border-border text-sm font-medium rounded-lg px-3 py-2 focus:ring-2 focus:ring-foreground outline-none cursor-pointer text-foreground"
       >
         {ATTENDANCE_OPTIONS.map((opt) => (
           <option key={opt} value={opt}>
@@ -153,7 +153,7 @@ const CourseCard = memo(function CourseCard({
 
       {/* Notes preview */}
       {course.notes && (
-        <p className="text-xs text-zinc-400 dark:text-zinc-500 truncate">
+        <p className="text-xs text-muted-foreground truncate">
           📝 {course.notes}
         </p>
       )}
@@ -204,14 +204,14 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
     <div className="space-y-4">
       {/* Filter bar — hidden in focus mode */}
       {!focusMode && (
-        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 glass p-4 rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 shadow-mac">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 glass p-4 rounded-xl border border-border/60 shadow-mac">
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-zinc-500 shrink-0" />
-              <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300 shrink-0">科目：</span>
+              <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="text-sm font-bold text-foreground/80 shrink-0">科目：</span>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="flex-1 min-w-0 bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-zinc-900 outline-none cursor-pointer text-zinc-800 dark:text-zinc-200 font-medium"
+                className="flex-1 min-w-0 bg-card border border-border text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-foreground outline-none cursor-pointer text-foreground font-medium"
               >
                 {uniqueCategories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -221,13 +221,13 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
               </select>
             </div>
 
-            <div className="flex items-center gap-2 sm:border-l-2 sm:border-zinc-200 dark:sm:border-zinc-700 sm:pl-4">
+            <div className="flex items-center gap-2 sm:border-l-2 sm:border-border sm:pl-4">
               <Target className="w-4 h-4 text-orange-500 shrink-0" />
-              <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300 shrink-0">考試目標：</span>
+              <span className="text-sm font-bold text-foreground/80 shrink-0">考試目標：</span>
               <select
                 value={selectedExam}
                 onChange={(e) => setSelectedExam(e.target.value)}
-                className="flex-1 min-w-0 bg-white dark:bg-zinc-700 border border-zinc-300 dark:border-zinc-600 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 outline-none cursor-pointer text-zinc-800 dark:text-zinc-200 font-medium"
+                className="flex-1 min-w-0 bg-card border border-border text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 outline-none cursor-pointer text-foreground font-medium"
               >
                 {uniqueExams.map((exam) => (
                   <option key={exam as string} value={exam as string}>
@@ -237,13 +237,13 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
               </select>
             </div>
 
-          <div className="flex items-center gap-3 bg-white dark:bg-zinc-800 px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm sm:ml-auto">
+          <div className="flex items-center gap-3 bg-card px-4 py-2 rounded-lg border border-border shadow-sm sm:ml-auto">
             <Activity className="w-4 h-4 text-green-500" />
-            <span className="text-sm font-bold text-zinc-600 dark:text-zinc-300">
-              共 <span className="text-zinc-900 dark:text-zinc-100">{totalFiltered}</span> 堂
+            <span className="text-sm font-bold text-muted-foreground">
+              共 <span className="text-foreground">{totalFiltered}</span> 堂
             </span>
-            <span className="text-zinc-300 dark:text-zinc-600">|</span>
-            <span className="text-sm font-bold text-zinc-600 dark:text-zinc-300">
+            <span className="text-muted-foreground/50">|</span>
+            <span className="text-sm font-bold text-muted-foreground">
               已掌握 <span className="text-green-600 dark:text-green-400">{studiedFiltered}</span> 堂
             </span>
             <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100 text-sm px-2 py-0.5 shadow-sm">
@@ -257,7 +257,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
       {isMobile ? (
         <div className="space-y-3">
           {filteredCourses.length === 0 ? (
-            <div className="text-center py-12 text-zinc-500 dark:text-zinc-400 text-base font-bold">
+            <div className="text-center py-12 text-muted-foreground text-base font-bold">
               {focusMode ? "🎉 太棒了！目前沒有高危課程" : "這個篩選條件下沒有找到任何課程喔！"}
             </div>
           ) : (
@@ -274,40 +274,40 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
         </div>
       ) : (
         /* Desktop: Table */
-        <div className="border border-zinc-200/60 dark:border-zinc-700/60 rounded-xl overflow-x-auto glass-heavy shadow-mac">
+        <div className="border border-border/60 rounded-xl overflow-x-auto glass-heavy shadow-mac">
           <Table>
-            <TableHeader className="bg-zinc-100/50 dark:bg-zinc-700/50">
+            <TableHeader className="bg-muted/50">
               <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
-                <TableHead className="w-[120px] text-sm font-bold text-zinc-700 dark:text-zinc-300 py-4">日期</TableHead>
-                <TableHead className="w-[120px] text-sm font-bold text-zinc-700 dark:text-zinc-300 py-4">時段</TableHead>
-                <TableHead className="w-[160px] text-sm font-bold text-zinc-700 dark:text-zinc-300 py-4">科目</TableHead>
-                <TableHead className="text-sm font-bold text-zinc-700 dark:text-zinc-300 py-4">課程主題</TableHead>
-                <TableHead className="w-[240px] text-sm font-bold text-zinc-700 dark:text-zinc-300 py-4">對應考試 (可點擊微調)</TableHead>
-                <TableHead className="w-[150px] text-sm font-bold text-zinc-700 dark:text-zinc-300 py-4">出席狀態</TableHead>
-                <TableHead className="w-[220px] text-sm font-bold text-zinc-700 dark:text-zinc-300 py-4">內化進度</TableHead>
+                <TableHead className="w-[120px] text-sm font-bold text-foreground/80 py-4">日期</TableHead>
+                <TableHead className="w-[120px] text-sm font-bold text-foreground/80 py-4">時段</TableHead>
+                <TableHead className="w-[160px] text-sm font-bold text-foreground/80 py-4">科目</TableHead>
+                <TableHead className="text-sm font-bold text-foreground/80 py-4">課程主題</TableHead>
+                <TableHead className="w-[240px] text-sm font-bold text-foreground/80 py-4">對應考試 (可點擊微調)</TableHead>
+                <TableHead className="w-[150px] text-sm font-bold text-foreground/80 py-4">出席狀態</TableHead>
+                <TableHead className="w-[220px] text-sm font-bold text-foreground/80 py-4">內化進度</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredCourses.map((course) => (
-                <TableRow key={course.id} className="hover:bg-zinc-50/80 dark:hover:bg-zinc-700/40 transition-colors">
-                  <TableCell className="text-zinc-600 dark:text-zinc-400 font-semibold text-[15px] py-4">{course.date}</TableCell>
-                  <TableCell className="text-zinc-600 dark:text-zinc-400 text-[15px] py-4">{course.time_slot}</TableCell>
+                <TableRow key={course.id} className="hover:bg-accent/50 transition-colors">
+                  <TableCell className="text-muted-foreground font-semibold text-[15px] py-4">{course.date}</TableCell>
+                  <TableCell className="text-muted-foreground text-[15px] py-4">{course.time_slot}</TableCell>
                   <TableCell className="py-4">
                     <Badge
                       variant="outline"
                       title={course.category}
                       className={`text-sm px-3 py-1 font-bold max-w-[140px] truncate inline-block align-middle ${
                         course.category === "Exam"
-                          ? "border-zinc-800 bg-zinc-800 text-white"
+                          ? "border-foreground bg-foreground text-background"
                           : course.category === "PBL"
                           ? "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                          : "bg-zinc-100 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200"
+                          : "bg-muted text-foreground"
                       }`}
                     >
                       {course.category}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-bold text-zinc-900 dark:text-zinc-100 text-[16px] py-4">
+                  <TableCell className="font-bold text-foreground text-[16px] py-4">
                     <span className="course-truncate" title={course.topic}>
                       {course.topic}
                     </span>
@@ -319,7 +319,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
                   </TableCell>
                   <TableCell className="py-4">
                     {["Exam", "Holiday", "PBL"].includes(course.category) ? (
-                      <span className="text-zinc-300 dark:text-zinc-600 text-base font-bold">-</span>
+                      <span className="text-muted-foreground/50 text-base font-bold">-</span>
                     ) : (
                       <select
                         value={course.target_exam || ""}
@@ -343,7 +343,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
                     <select
                       value={course.attendance}
                       onChange={(e) => onUpdateCourse(course.id, { attendance: e.target.value })}
-                      className="w-full bg-white dark:bg-zinc-700 border-2 border-zinc-200 dark:border-zinc-600 text-[15px] font-medium rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-zinc-900 outline-none cursor-pointer text-zinc-800 dark:text-zinc-200"
+                      className="w-full bg-card border-2 border-border text-[15px] font-medium rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-foreground outline-none cursor-pointer text-foreground"
                     >
                       {ATTENDANCE_OPTIONS.map((opt) => (
                         <option key={opt} value={opt}>
@@ -359,7 +359,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
               ))}
               {filteredCourses.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12 text-zinc-500 dark:text-zinc-400 text-lg font-bold">
+                  <TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-lg font-bold">
                     {focusMode ? "🎉 太棒了！目前沒有高危課程" : "這個篩選條件下沒有找到任何課程喔！"}
                   </TableCell>
                 </TableRow>

@@ -42,10 +42,10 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
   }, [course, onUpdate]);
 
   const categoryColor = course.category === "Exam"
-    ? "border-zinc-800 bg-zinc-800 text-white"
+    ? "border-foreground bg-foreground text-background"
     : course.category === "PBL"
     ? "border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-    : "bg-zinc-100 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200";
+    : "bg-muted text-foreground";
 
   // On mobile, center the modal; on desktop, anchor near the clicked event
   const isMobile = window.innerWidth < 768;
@@ -72,19 +72,19 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
       <div className="fixed inset-0 z-[9998] bg-black/20 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div style={style} className="glass-heavy rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 shadow-mac-elevated overflow-hidden animate-in fade-in zoom-in-95 duration-150 w-[320px] md:w-[320px]">
+      <div style={style} className="glass-heavy rounded-xl border border-border/60 shadow-mac-elevated overflow-hidden animate-in fade-in zoom-in-95 duration-150 w-[320px] md:w-[320px]">
         {/* Header */}
-        <div className="bg-zinc-50 dark:bg-zinc-900/50 px-4 py-3 flex items-start justify-between gap-2 border-b border-zinc-100 dark:border-zinc-700">
+        <div className="bg-muted/50 px-4 py-3 flex items-start justify-between gap-2 border-b border-border">
           <div className="min-w-0">
             <Badge variant="outline" className={`text-xs px-2 py-0.5 font-bold mb-1.5 ${categoryColor}`}>
               {course.category}
             </Badge>
-            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 leading-snug line-clamp-2">{course.topic}</p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{course.date} · {course.time_slot}</p>
-            {course.teacher && <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{course.teacher}</p>}
+            <p className="text-sm font-bold text-foreground leading-snug line-clamp-2">{course.topic}</p>
+            <p className="text-xs text-muted-foreground mt-1">{course.date} · {course.time_slot}</p>
+            {course.teacher && <p className="text-xs text-muted-foreground/70 mt-0.5">{course.teacher}</p>}
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-md transition-colors shrink-0">
-            <X className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+          <button onClick={onClose} className="p-1 hover:bg-accent rounded-md transition-colors shrink-0">
+            <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
 
@@ -92,11 +92,11 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
         <div className="px-4 py-3 space-y-4 max-h-[60vh] overflow-y-auto">
           {/* Attendance */}
           <div>
-            <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5 block">出席狀態</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1.5 block">出席狀態</label>
             <select
               value={course.attendance}
               onChange={(e) => onUpdate(course.id, { attendance: e.target.value })}
-              className="w-full bg-white dark:bg-zinc-700 border-2 border-zinc-200 dark:border-zinc-600 text-sm font-medium rounded-lg px-3 py-2 focus:ring-2 focus:ring-zinc-900 outline-none cursor-pointer text-zinc-800 dark:text-zinc-200"
+              className="w-full bg-card border-2 border-border text-sm font-medium rounded-lg px-3 py-2 focus:ring-2 focus:ring-foreground outline-none cursor-pointer text-foreground"
             >
               {ATTENDANCE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
@@ -104,17 +104,17 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
 
           {/* Study Progress */}
           <div>
-            <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-2 block">內化進度</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2 block">內化進度</label>
             <div className="flex items-center gap-4">
               {PROGRESS_TYPES.map(type => {
                 const checked = Array.isArray(course.study_progress) && course.study_progress.includes(type);
                 return (
-                  <label key={type} className={`flex items-center gap-1.5 text-sm cursor-pointer transition-colors ${checked ? "text-green-700 dark:text-green-400 font-extrabold" : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 font-bold"}`}>
+                  <label key={type} className={`flex items-center gap-1.5 text-sm cursor-pointer transition-colors ${checked ? "text-green-700 dark:text-green-400 font-extrabold" : "text-muted-foreground hover:text-foreground font-bold"}`}>
                     <input
                       type="checkbox"
                       checked={checked}
                       onChange={(e) => handleProgressToggle(type, e.target.checked)}
-                      className="w-4.5 h-4.5 rounded border-2 border-zinc-300 text-green-600 focus:ring-green-600 cursor-pointer accent-green-600"
+                      className="w-4.5 h-4.5 rounded border-2 border-border text-green-600 focus:ring-green-600 cursor-pointer accent-green-600"
                     />
                     {type}
                   </label>
@@ -132,13 +132,13 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
 
           {/* Notes */}
           <div>
-            <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1.5 block">考點筆記</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1.5 block">考點筆記</label>
             <textarea
               value={localNotes}
               onChange={(e) => handleNotesChange(e.target.value)}
               placeholder="記錄考試重點…"
               rows={3}
-              className="w-full bg-white dark:bg-zinc-700 border-2 border-zinc-200 dark:border-zinc-600 text-sm font-medium rounded-lg px-3 py-2 focus:ring-2 focus:ring-zinc-900 outline-none resize-y text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
+              className="w-full bg-card border-2 border-border text-sm font-medium rounded-lg px-3 py-2 focus:ring-2 focus:ring-foreground outline-none resize-y text-foreground placeholder:text-muted-foreground"
             />
           </div>
         </div>
