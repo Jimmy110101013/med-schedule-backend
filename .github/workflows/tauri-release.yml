@@ -44,4 +44,60 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'Med Schedule Tracker ${{ github.ref_name }}'
           releaseBody: 'Desktop app release'
-          releaseDraft: true
+          releaseDraft: false
+
+  update-homebrew:
+    needs: build-macos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for release assets
+        run: sleep 30
+
+      - name: Get release asset URL and SHA
+        id: asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          # Find the .dmg asset URL from the release
+          DMG_URL=$(gh release view "$TAG" --repo Jimmy110101013/med-schedule-backend --json assets -q '.assets[] | select(.name | endswith(".dmg")) | .url')
+          # Download and compute SHA256
+          curl -sL "$DMG_URL" -o app.dmg
+          SHA=$(shasum -a 256 app.dmg | awk '{print $1}')
+          # Extract the actual .dmg filename for the cask URL
+          DMG_NAME=$(gh release view "$TAG" --repo Jimmy110101013/med-schedule-backend --json assets -q '.assets[] | select(.name | endswith(".dmg")) | .name')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "dmg_name=$DMG_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Update Homebrew tap
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          git clone https://x-access-token:${TAP_TOKEN}@github.com/Jimmy110101013/homebrew-tap.git
+          cd homebrew-tap
+
+          cat > Casks/med-schedule-tracker.rb << 'CASK'
+          cask "med-schedule-tracker" do
+            version "REPLACE_VERSION"
+            sha256 "REPLACE_SHA"
+
+            url "REPLACE_URL"
+            name "Med Schedule Tracker"
+            desc "NYCU Med10 clinical course tracking dashboard"
+            homepage "https://github.com/Jimmy110101013/med-schedule-backend"
+
+            app "Med Schedule Tracker.app"
+          end
+          CASK
+          sed -i 's/^          //' Casks/med-schedule-tracker.rb
+          sed -i "s|REPLACE_VERSION|${{ steps.asset.outputs.version }}|" Casks/med-schedule-tracker.rb
+          sed -i "s|REPLACE_SHA|${{ steps.asset.outputs.sha }}|" Casks/med-schedule-tracker.rb
+          sed -i "s|REPLACE_URL|https://github.com/Jimmy110101013/med-schedule-backend/releases/download/v${{ steps.asset.outputs.version }}/${{ steps.asset.outputs.dmg_name }}|" Casks/med-schedule-tracker.rb
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Update med-schedule-tracker to ${{ steps.asset.outputs.version }}"
+          git push

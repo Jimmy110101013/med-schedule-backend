@@ -21,3 +21,4 @@ build/
 *.spec
 src-tauri/sidecar/build/
 src-tauri/sidecar/dist/
+src-tauri/binaries/
