@@ -3,7 +3,7 @@ import { ATTENDANCE_OPTIONS, PROGRESS_TYPES, isStudied } from "@/lib/constants";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Filter, Target, Activity, StickyNote } from "lucide-react";
+import { Filter, Target, Activity } from "lucide-react";
 
 export interface Course {
   id: number;
@@ -311,11 +311,6 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
                     <span className="course-truncate" title={course.topic}>
                       {course.topic}
                     </span>
-                    {course.notes && (
-                      <span title={course.notes.length > 80 ? course.notes.slice(0, 80) + "…" : course.notes}>
-                        <StickyNote className="inline-block w-4 h-4 ml-1.5 text-amber-500 dark:text-amber-400 align-middle" />
-                      </span>
-                    )}
                   </TableCell>
                   <TableCell className="py-4">
                     {["Exam", "Holiday", "PBL"].includes(course.category) ? (
