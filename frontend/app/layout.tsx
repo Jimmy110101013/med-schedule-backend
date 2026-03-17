@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-dot-pattern`}
       >
         <ThemeProvider
           attribute="class"
@@ -35,7 +35,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex min-h-screen">
+          <div className="relative flex min-h-screen">
             <Sidebar />
             <main className="flex-1 min-w-0 overflow-auto">
               {children}
