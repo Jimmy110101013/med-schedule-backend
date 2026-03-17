@@ -12,3 +12,10 @@ __pycache__/
 
 # 忽略本機 SQLite 資料庫 (如果你還留著的話)
 *.db
+
+# Tauri / Rust build artifacts
+src-tauri/target/
+
+# PyInstaller build artifacts
+build/
+*.spec

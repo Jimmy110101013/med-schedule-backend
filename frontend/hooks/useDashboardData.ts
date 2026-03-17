@@ -4,9 +4,11 @@ import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import type { Course } from "@/components/InteractiveTable";
 import { isStudied, PROGRESS_TYPES, EXCLUDED_FROM_FOCUS } from "@/lib/constants";
+import { getCourses, updateCourse as apiUpdateCourse, getExamRules } from "@/lib/api";
+import type { ExamRule } from "@/lib/api";
 
 export { isStudied };
-export interface ExamRule { id: number; keyword: string; categories: string[]; }
+export type { ExamRule };
 
 const getExamTargetCategories = (examTopic: string, courseTopic: string = "", rules: ExamRule[]): string[] => {
   const lowerExam = examTopic.toLowerCase();
@@ -33,22 +35,19 @@ export function useDashboardData() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/courses`).then(res => res.json()),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules`).then(res => res.json())
-    ]).then(([coursesData, rulesData]) => {
-      setCourses(coursesData);
-      setRules(rulesData);
-      setLoading(false);
-    }).catch(() => toast.error("系統連線異常"));
+    Promise.all([getCourses(), getExamRules()])
+      .then(([coursesData, rulesData]) => {
+        setCourses(coursesData);
+        setRules(rulesData);
+        setLoading(false);
+      })
+      .catch(() => toast.error("系統連線異常"));
   }, []);
 
   const handleUpdateCourse = async (courseId: number, updates: Partial<Course>) => {
     setCourses(prev => prev.map(c => c.id === courseId ? { ...c, ...updates } : c));
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/courses/${courseId}`, {
-        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updates)
-      });
+      await apiUpdateCourse(courseId, updates);
     } catch { toast.error("儲存失敗"); }
   };
 

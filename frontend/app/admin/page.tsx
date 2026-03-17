@@ -4,10 +4,83 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Toaster, toast } from "sonner";
-import { Settings, Plus, Trash2, ArrowLeft, UploadCloud, Edit2, Check, X } from "lucide-react";
+import { Settings, Plus, Trash2, ArrowLeft, UploadCloud, Edit2, Check, X, FileText, Loader2 } from "lucide-react";
 import Link from "next/link";
+import {
+  getExamRules, createExamRule, updateExamRule, deleteExamRule as apiDeleteExamRule,
+  importPdf, insertParsedCourses,
+  type ExamRule,
+} from "@/lib/api";
 
-interface ExamRule { id: number; keyword: string; categories: string[]; }
+function isTauri(): boolean {
+  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+}
+
+function PdfUploadCard() {
+  const [importing, setImporting] = useState(false);
+
+  if (!isTauri()) {
+    return (
+      <Card className="shadow-sm border-border bg-card">
+        <CardHeader><CardTitle className="text-lg flex items-center gap-2 text-card-foreground"><UploadCloud className="w-5 h-5 text-blue-500" /> 匯入新學期 PDF 課表</CardTitle></CardHeader>
+        <CardContent><div className="border-2 border-dashed border-border rounded-lg p-8 text-center bg-muted"><p className="text-muted-foreground text-sm font-medium">PDF 匯入僅支援桌面版應用程式</p></div></CardContent>
+      </Card>
+    );
+  }
+
+  const handleUpload = async () => {
+    try {
+      const { open } = await import("@tauri-apps/plugin-dialog");
+      const selected = await open({
+        multiple: false,
+        filters: [{ name: "PDF", extensions: ["pdf"] }],
+      });
+      if (!selected) return;
+
+      const filePath = selected as string;
+      setImporting(true);
+      toast.info("正在解析 PDF...");
+
+      const parsed = await importPdf(filePath);
+      if (parsed.length === 0) {
+        toast.warning("未從 PDF 中解析出任何課程");
+        return;
+      }
+
+      const count = await insertParsedCourses(parsed);
+      toast.success(`成功匯入 ${count} 筆課程！`);
+    } catch (err) {
+      toast.error(`匯入失敗：${err instanceof Error ? err.message : "未知錯誤"}`);
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <Card className="shadow-sm border-border bg-card">
+      <CardHeader><CardTitle className="text-lg flex items-center gap-2 text-card-foreground"><UploadCloud className="w-5 h-5 text-blue-500" /> 匯入新學期 PDF 課表</CardTitle></CardHeader>
+      <CardContent>
+        <button
+          onClick={handleUpload}
+          disabled={importing}
+          className="w-full border-2 border-dashed border-border rounded-lg p-8 text-center bg-muted hover:bg-accent transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {importing ? (
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+              <p className="text-muted-foreground text-sm font-medium">解析中，請稍候...</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <FileText className="w-8 h-8 text-blue-500" />
+              <p className="text-muted-foreground text-sm font-medium">點擊選擇 PDF 課表檔案</p>
+            </div>
+          )}
+        </button>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function AdminDashboard() {
   const [rules, setRules] = useState<ExamRule[]>([]);
@@ -18,7 +91,7 @@ export default function AdminDashboard() {
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
 
   const fetchRules = () => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules`).then(res => res.json()).then(data => setRules(data));
+    getExamRules().then(data => setRules(data));
   };
 
   useEffect(() => { fetchRules(); }, []);
@@ -27,16 +100,13 @@ export default function AdminDashboard() {
     if (!newKeyword || !newCategories) return toast.error("請填寫完整資訊");
     const isEdit = id !== undefined;
     const categoryList = newCategories.split(";").map(s => s.trim()).filter(s => s);
-    const url = isEdit ? `${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules/${id}` : `${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules`;
-    const method = isEdit ? "PUT" : "POST";
 
     setIsSaving(true);
     try {
-      const res = await fetch(url, {
-        method, headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyword: newKeyword, categories: categoryList })
-      });
-      if (res.ok) {
+      const ok = isEdit
+        ? await updateExamRule(id, newKeyword, categoryList)
+        : await createExamRule(newKeyword, categoryList);
+      if (ok) {
         toast.success(isEdit ? "規則已更新" : "規則建立成功！");
         setNewKeyword(""); setNewCategories(""); setEditingId(null);
         fetchRules();
@@ -55,8 +125,8 @@ export default function AdminDashboard() {
     if (!confirm("確定要刪除這條規則嗎？")) return;
     setIsDeleting(ruleId);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/exam-rules/${ruleId}`, { method: "DELETE" });
-      if (res.ok) { toast.success("規則已刪除"); fetchRules(); }
+      const ok = await apiDeleteExamRule(ruleId);
+      if (ok) { toast.success("規則已刪除"); fetchRules(); }
     } catch { toast.error("伺服器連線異常"); }
     finally { setIsDeleting(null); }
   };
@@ -70,10 +140,7 @@ export default function AdminDashboard() {
           <Link href="/" className="text-sm font-medium text-blue-600 flex items-center gap-2"><ArrowLeft className="w-4 h-4" /> 返回戰略儀表板</Link>
         </header>
 
-        <Card className="shadow-sm border-border bg-card">
-          <CardHeader><CardTitle className="text-lg flex items-center gap-2 text-card-foreground"><UploadCloud className="w-5 h-5 text-blue-500" /> 匯入新學期 PDF 課表</CardTitle></CardHeader>
-          <CardContent><div className="border-2 border-dashed border-border rounded-lg p-8 text-center bg-muted"><p className="text-muted-foreground text-sm font-medium">功能建置中：即將整合 PDF 解析引擎</p></div></CardContent>
-        </Card>
+        <PdfUploadCard />
 
         <Card className="shadow-sm border-border bg-card">
           <CardHeader><CardTitle className="text-lg text-card-foreground">{editingId ? "📝 編輯考試映射規則" : "➕ 新增區段考範圍規則"}</CardTitle></CardHeader>
