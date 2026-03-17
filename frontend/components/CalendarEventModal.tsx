@@ -69,10 +69,10 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-[9998]" onClick={onClose} />
+      <div className="fixed inset-0 z-[9998] bg-black/20 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div style={style} className="bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 w-[320px] md:w-[320px]">
+      <div style={style} className="glass-heavy rounded-xl border border-zinc-200/60 dark:border-zinc-700/60 shadow-mac-elevated overflow-hidden animate-in fade-in zoom-in-95 duration-150 w-[320px] md:w-[320px]">
         {/* Header */}
         <div className="bg-zinc-50 dark:bg-zinc-900/50 px-4 py-3 flex items-start justify-between gap-2 border-b border-zinc-100 dark:border-zinc-700">
           <div className="min-w-0">

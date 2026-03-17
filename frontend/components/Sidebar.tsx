@@ -19,7 +19,7 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        "flex flex-col border-r bg-card transition-all duration-200",
+        "flex flex-col border-r glass transition-all duration-200",
         isMobile ? "w-14" : "w-56"
       )}
     >

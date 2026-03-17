@@ -75,7 +75,7 @@ export default function Home() {
   }, [enrichedCourses, allExams]);
 
   return (
-    <main className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950 p-4 md:p-8 text-zinc-900 dark:text-zinc-100 font-sans text-sm md:text-base">
+    <main className="min-h-screen p-4 md:p-8 text-zinc-900 dark:text-zinc-100 font-sans text-sm md:text-base">
       <Toaster position="bottom-right" />
 
       <div className="max-w-[1400px] mx-auto space-y-8">
@@ -92,7 +92,7 @@ export default function Home() {
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 font-bold text-sm transition-all ${
                 focusMode
                   ? "bg-orange-500 text-white border-orange-500 shadow-lg"
-                  : "bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-600 hover:border-orange-300"
+                  : "glass text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-600 hover:border-orange-300"
               }`}
             >
               <Zap className="w-4 h-4" />
@@ -101,7 +101,7 @@ export default function Home() {
             {/* Dark mode toggle */}
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="p-2.5 rounded-xl bg-white dark:bg-zinc-800 border-2 border-zinc-200 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-400 transition-colors"
+              className="p-2.5 rounded-xl glass border-2 border-zinc-200 dark:border-zinc-600 hover:border-zinc-400 dark:hover:border-zinc-400 transition-colors"
               aria-label="Toggle dark mode"
             >
               {mounted ? (theme === "dark" ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-zinc-600" />) : <Moon className="w-5 h-5 text-zinc-600" />}
@@ -129,7 +129,7 @@ export default function Home() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="shadow-sm border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/80 p-1">
+              <Card className="shadow-mac border-zinc-200/60 dark:border-zinc-700/60 glass-heavy p-1">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between">
                   <CardTitle className="text-base font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-2"><Flame className="w-5 h-5 text-orange-500" /> 下一場區段考倒數</CardTitle>
                   <Badge variant="outline" className="bg-orange-50 text-orange-700 border-none font-bold text-sm px-3 py-1">{nextExam ? new Date(nextExam.date + "T00:00:00").toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric" }) : "未知"}</Badge>
@@ -143,7 +143,7 @@ export default function Home() {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/80 overflow-hidden p-1">
+              <Card className="shadow-mac border-zinc-200/60 dark:border-zinc-700/60 glass-heavy overflow-hidden p-1">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between">
                   <CardTitle className="text-base font-bold text-zinc-500 dark:text-zinc-400 flex items-center gap-2"><Target className="w-5 h-5 text-green-600" /> 該考區精準內化率</CardTitle>
                 </CardHeader>
@@ -163,7 +163,7 @@ export default function Home() {
               </Card>
             </div>
 
-            <div className="bg-white dark:bg-zinc-800/80 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
+            <div className="glass-heavy p-6 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 shadow-mac">
               <h3 className="text-lg font-black text-zinc-800 dark:text-zinc-100 mb-5 flex items-center gap-2"><Activity className="w-5 h-5 text-blue-500" /> 各科目獨立進度追蹤</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-5">
                 {subjectStats.slice(0, 16).map(stat => (
@@ -182,12 +182,12 @@ export default function Home() {
 
             <Tabs defaultValue="list" className="w-full">
               <div className="flex justify-between items-end mb-4 mt-8">
-                <TabsList className="bg-zinc-100/80 dark:bg-zinc-800 p-1 rounded-lg">
+                <TabsList className="p-1 rounded-xl">
                   <TabsTrigger value="list" className="font-bold text-sm px-5 py-1.5">📝 互動列表</TabsTrigger>
                   <TabsTrigger value="calendar" className="font-bold text-sm px-5 py-1.5">📅 戰略週曆</TabsTrigger>
                 </TabsList>
               </div>
-              <TabsContent value="list" className="bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 rounded-2xl shadow-sm mt-0 p-5 table-container">
+              <TabsContent value="list" className="glass-heavy border border-zinc-200/60 dark:border-zinc-700/60 rounded-2xl shadow-mac mt-0 p-5 table-container">
                 <InteractiveTable
                   courses={focusFilteredCourses}
                   allExams={allExams}
@@ -195,7 +195,7 @@ export default function Home() {
                   focusMode={focusMode}
                 />
               </TabsContent>
-              <TabsContent value="calendar" className="bg-white dark:bg-zinc-800/80 p-3 md:p-6 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm mt-0 relative overflow-hidden">
+              <TabsContent value="calendar" className="glass-heavy p-3 md:p-6 rounded-2xl border border-zinc-200/60 dark:border-zinc-700/60 shadow-mac mt-0 relative overflow-hidden">
                 <FullCalendar
                   plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
                   initialView={isMobile ? "listWeek" : "timeGridWeek"}
