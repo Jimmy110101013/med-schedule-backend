@@ -92,7 +92,7 @@ export function useDashboardData() {
     else if (course.category === "PBL") bgColor = "var(--fc-pbl)";
     else if (isStudied(course.study_progress)) bgColor = "var(--fc-studied)";
     else if (["現場出席", "錄影補課"].includes(course.attendance)) bgColor = "var(--fc-attended)";
-    return { id: String(course.id), title: `[${course.category}] ${course.topic}`, start: `${course.date}T${startT}`, end: `${course.date}T${endT}`, backgroundColor: bgColor, borderColor: bgColor, textColor: "#ffffff" };
+    return { id: String(course.id), title: `[${course.category}] ${course.topic}`, start: `${course.date}T${startT}`, end: `${course.date}T${endT}`, backgroundColor: bgColor, borderColor: bgColor, textColor: "#f0ebe5" };
   }), [enrichedCourses]);
 
   return { enrichedCourses, allExams, loading, subjectStats, calendarEvents, handleUpdateCourse };
