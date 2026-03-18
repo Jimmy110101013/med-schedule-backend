@@ -22,3 +22,14 @@ build/
 src-tauri/sidecar/build/
 src-tauri/sidecar/dist/
 src-tauri/binaries/
+
+# Claude Code
+.claude/
+.claudeignore
+CLAUDE.md
+
+# Windows scripts
+start.bat
+
+# Virtual environments
+.venv/
