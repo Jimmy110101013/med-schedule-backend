@@ -16,8 +16,8 @@ NYCU 醫四週課表戰略儀表板
 - 16-subject progress grid with focus mode for high-risk courses
 - Dark and light theme support
 
-![Dashboard Screenshot](docs/example01.png)
-![Dashboard Screenshot](docs/example02.png)
+![Dashboard Screenshot](docs/example_01.png)
+![Dashboard Screenshot](docs/example_02.png)
 
 ## Installation
 
