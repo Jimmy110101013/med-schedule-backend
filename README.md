@@ -16,7 +16,8 @@ NYCU 醫四週課表戰略儀表板
 - 16-subject progress grid with focus mode for high-risk courses
 - Dark and light theme support
 
-<!-- Screenshot: replace this comment with a screenshot of the dashboard -->
+![Dashboard Screenshot](docs/example01.png)
+![Dashboard Screenshot](docs/example02.png)
 
 ## Installation
 
@@ -26,14 +27,6 @@ NYCU 醫四週課表戰略儀表板
 brew tap Jimmy110101013/homebrew-tap
 brew install med-schedule-tracker
 ```
-
-### Direct Download
-
-Download the latest `.dmg` from [GitHub Releases](https://github.com/Jimmy110101013/med-schedule-backend/releases).
-
-### Web
-
-Visit the hosted version at [med-schedule-tracker.vercel.app](https://med-schedule-tracker.vercel.app).
 
 ## Features
 
@@ -83,10 +76,6 @@ npm install
 ### Start
 
 ```bash
-# Option 1: start both (Windows)
-start.bat
-
-# Option 2: start separately
 uvicorn main:app --reload              # Backend  -> http://localhost:8000
 cd frontend && npm run dev             # Frontend -> http://localhost:3000
 ```
@@ -111,14 +100,7 @@ med-schedule-backend/
 
 ## API Reference
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/courses` | List all courses |
-| PUT | `/api/courses/{id}` | Update attendance, progress, or exam assignment |
-| GET | `/api/exam-rules` | List exam mapping rules |
-| POST | `/api/exam-rules` | Create a mapping rule |
-| PUT | `/api/exam-rules/{id}` | Update a mapping rule |
-| DELETE | `/api/exam-rules/{id}` | Delete a mapping rule |
+Full interactive documentation is available at [`/docs`](https://med-schedule-backend.onrender.com/docs) (Swagger UI) once the backend is running.
 
 ## License
 
