@@ -1,16 +1,31 @@
+import logging
+
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 import json
 
 from database.db_setup import SessionLocal, engine, Base
 from database.models import Course, ExamRule
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "https://med-schedule-tracker.vercel.app",
+        "tauri://localhost",
+        "https://tauri.localhost",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_db():
     db = SessionLocal()
@@ -18,14 +33,14 @@ def get_db():
     finally: db.close()
 
 class CourseUpdate(BaseModel):
-    attendance: Optional[str] = None
-    study_progress: Optional[List[str]] = None
-    target_exam_override: Optional[str] = None
-    notes: Optional[str] = None
+    attendance: Optional[str] = Field(None, max_length=20)
+    study_progress: Optional[List[str]] = Field(None, max_length=50)
+    target_exam_override: Optional[str] = Field(None, max_length=100)
+    notes: Optional[str] = Field(None, max_length=2000)
 
 class ExamRuleCreate(BaseModel):
-    keyword: str
-    categories: List[str]
+    keyword: str = Field(..., min_length=1, max_length=200)
+    categories: List[str] = Field(..., min_length=1, max_length=50)
 
 @app.get("/health")
 @app.head("/health")
@@ -34,7 +49,8 @@ def health_check(db: Session = Depends(get_db)):
         db.execute(text("SELECT 1"))
         return {"status": "alive", "database": "awake"}
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        logger.exception("Health check failed")
+        return {"status": "error", "message": "Database connection failed"}
 
 @app.get("/api/courses")
 def get_all_courses(db: Session = Depends(get_db)):

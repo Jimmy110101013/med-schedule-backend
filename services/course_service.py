@@ -10,7 +10,13 @@ def import_pdf_to_db(pdf_path: str):
     """
     接收 PDF 路徑，執行解析、驗證，並寫入資料庫
     """
-    if not os.path.exists(pdf_path):
+    allowed_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
+    resolved = os.path.abspath(pdf_path)
+    if not resolved.startswith(allowed_dir + os.sep):
+        print(f"❌ 路徑不在允許的 data/ 目錄中: {pdf_path}")
+        return
+
+    if not os.path.exists(resolved):
         print(f"❌ 找不到 PDF 檔案: {pdf_path}")
         return
         

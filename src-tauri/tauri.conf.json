@@ -20,7 +20,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; connect-src 'self' https://med-schedule-backend.onrender.com http://localhost:8000; style-src 'self' 'unsafe-inline'; script-src 'self'"
     }
   },
   "bundle": {

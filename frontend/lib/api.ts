@@ -79,6 +79,7 @@ export async function getCourses(): Promise<Course[]> {
     return rows.map(parseCourseRow);
   }
   const res = await fetch(`${API}/api/courses`);
+  if (!res.ok) throw new Error(`Failed to fetch courses: ${res.status}`);
   return res.json();
 }
 
@@ -98,11 +99,12 @@ export async function updateCourse(id: number, updates: Partial<Course>): Promis
     await db.execute(`UPDATE courses SET ${setClauses.join(", ")} WHERE id = ?`, values);
     return;
   }
-  await fetch(`${API}/api/courses/${id}`, {
+  const res = await fetch(`${API}/api/courses/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
   });
+  if (!res.ok) throw new Error(`Failed to update course ${id}: ${res.status}`);
 }
 
 export async function getExamRules(): Promise<ExamRule[]> {
@@ -112,6 +114,7 @@ export async function getExamRules(): Promise<ExamRule[]> {
     return rows.map(parseExamRuleRow);
   }
   const res = await fetch(`${API}/api/exam-rules`);
+  if (!res.ok) throw new Error(`Failed to fetch exam rules: ${res.status}`);
   return res.json();
 }
 
