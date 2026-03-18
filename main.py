@@ -1,4 +1,5 @@
 import logging
+import os
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,14 +15,19 @@ from database.models import Course, ExamRule
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
+_default_origins = [
+    "http://localhost:3000",
+    "https://med-schedule-backend-rzos.vercel.app",
+    "tauri://localhost",
+    "https://tauri.localhost",
+]
+_extra = os.getenv("ALLOWED_ORIGINS", "")
+ALLOWED_ORIGINS = _default_origins + [o.strip() for o in _extra.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://med-schedule-tracker.vercel.app",
-        "tauri://localhost",
-        "https://tauri.localhost",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
