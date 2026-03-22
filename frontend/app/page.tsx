@@ -129,12 +129,12 @@ export default function Home() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="shadow-mac border-border/60 glass-heavy p-1">
-                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <Card className="shadow-mac border-border/60 glass-heavy px-2 pt-5 pb-4">
+                <CardHeader className="pb-1 flex flex-row items-center justify-between">
                   <CardTitle className="text-base font-bold text-muted-foreground flex items-center gap-2"><Flame className="w-5 h-5 text-orange-500" /> Next Block Exam</CardTitle>
                   <Badge variant="outline" className="bg-orange-50 text-orange-700 border-none font-bold text-sm px-3 py-1">{nextExam ? new Date(nextExam.date + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "TBD"}</Badge>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-1">
                   <div className="flex items-baseline gap-2">
                     <span className="text-6xl font-black text-foreground">{daysToExam > 0 ? daysToExam : 0}</span>
                     <span className="text-xl text-muted-foreground font-bold">days</span>
@@ -143,11 +143,11 @@ export default function Home() {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-mac border-border/60 glass-heavy overflow-hidden p-1">
-                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <Card className="shadow-mac border-border/60 glass-heavy overflow-hidden px-2 pt-5 pb-4">
+                <CardHeader className="pb-1 flex flex-row items-center justify-between">
                   <CardTitle className="text-base font-bold text-muted-foreground flex items-center gap-2"><Target className="w-5 h-5 text-green-600" /> Block Mastery Rate</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-1">
                   <div className="text-4xl font-black text-foreground">{blockProgressRate.toFixed(1)} <span className="text-2xl text-muted-foreground font-bold">%</span></div>
                   <div className="flex items-center justify-between mt-4 text-sm font-bold text-muted-foreground mb-2">
                     <span>Mastered: <span className="text-foreground">{blockStudied}</span></span>
