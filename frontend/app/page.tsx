@@ -82,8 +82,8 @@ export default function Home() {
 
         <header className="border-b border-border pb-4 pt-2 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl md:text-4xl font-black tracking-tight text-foreground mb-2 leading-tight">NYCU Med10 戰略儀表板</h1>
-            <p className="text-muted-foreground text-sm md:text-lg font-bold flex items-center gap-2"><CalendarIcon className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> 114-2 學期 臨床醫學進度追蹤</p>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight text-foreground mb-2 leading-tight">MedTracker</h1>
+            <p className="text-muted-foreground text-sm md:text-lg font-bold flex items-center gap-2"><CalendarIcon className="w-4 h-4 md:w-5 md:h-5 shrink-0" /> 2026 Spring · Clinical Progress</p>
           </div>
           <div className="flex items-center gap-3">
             {/* Focus Mode toggle */}
@@ -96,7 +96,7 @@ export default function Home() {
               }`}
             >
               <Zap className="w-4 h-4" />
-              {focusMode ? "專注中" : "專注模式"}
+              {focusMode ? "Focused" : "Focus Mode"}
             </button>
             {/* Dark mode toggle */}
             <button
@@ -109,14 +109,14 @@ export default function Home() {
           </div>
         </header>
 
-        {loading ? <div className="flex justify-center items-center h-64 text-muted-foreground font-bold text-lg">系統核心啟動中...</div> : (
+        {loading ? <div className="flex justify-center items-center h-64 text-muted-foreground font-bold text-lg">Loading...</div> : (
           <>
             {/* Focus Mode banner */}
             {focusMode && (
               <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border-2 bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-800 text-orange-800 dark:text-orange-300 font-bold">
                 <div className="flex items-center gap-2">
                   <Zap className="w-5 h-5 shrink-0" />
-                  <span>⚠️ 專注模式：僅顯示 <strong>{focusFilteredCourses.length}</strong> 門高危科目（考期不到 7 天，進度為零）</span>
+                  <span>Focus Mode: Showing <strong>{focusFilteredCourses.length}</strong> at-risk courses (exam in &lt;7 days, no progress)</span>
                 </div>
                 <button
                   onClick={() => setFocusMode(false)}
@@ -131,40 +131,40 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="shadow-mac border-border/60 glass-heavy p-1">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                  <CardTitle className="text-base font-bold text-muted-foreground flex items-center gap-2"><Flame className="w-5 h-5 text-orange-500" /> 下一場區段考倒數</CardTitle>
-                  <Badge variant="outline" className="bg-orange-50 text-orange-700 border-none font-bold text-sm px-3 py-1">{nextExam ? new Date(nextExam.date + "T00:00:00").toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric" }) : "未知"}</Badge>
+                  <CardTitle className="text-base font-bold text-muted-foreground flex items-center gap-2"><Flame className="w-5 h-5 text-orange-500" /> Next Block Exam</CardTitle>
+                  <Badge variant="outline" className="bg-orange-50 text-orange-700 border-none font-bold text-sm px-3 py-1">{nextExam ? new Date(nextExam.date + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "TBD"}</Badge>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-baseline gap-2">
                     <span className="text-6xl font-black text-foreground">{daysToExam > 0 ? daysToExam : 0}</span>
-                    <span className="text-xl text-muted-foreground font-bold">天</span>
+                    <span className="text-xl text-muted-foreground font-bold">days</span>
                   </div>
-                  <p className="text-base text-muted-foreground mt-3 font-bold truncate">目標：{nextExam?.topic || "尚未排定"}</p>
+                  <p className="text-base text-muted-foreground mt-3 font-bold truncate">Target: {nextExam?.topic || "Not scheduled"}</p>
                 </CardContent>
               </Card>
 
               <Card className="shadow-mac border-border/60 glass-heavy overflow-hidden p-1">
                 <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                  <CardTitle className="text-base font-bold text-muted-foreground flex items-center gap-2"><Target className="w-5 h-5 text-green-600" /> 該考區精準內化率</CardTitle>
+                  <CardTitle className="text-base font-bold text-muted-foreground flex items-center gap-2"><Target className="w-5 h-5 text-green-600" /> Block Mastery Rate</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-4xl font-black text-foreground">{blockProgressRate.toFixed(1)} <span className="text-2xl text-muted-foreground font-bold">%</span></div>
                   <div className="flex items-center justify-between mt-4 text-sm font-bold text-muted-foreground mb-2">
-                    <span>已掌握 <span className="text-foreground">{blockStudied}</span> 堂</span>
-                    <span>範圍總計 <span className="text-foreground">{blockTotal}</span> 堂</span>
+                    <span>Mastered: <span className="text-foreground">{blockStudied}</span></span>
+                    <span>Total: <span className="text-foreground">{blockTotal}</span></span>
                   </div>
                   <div className="w-full bg-muted h-2.5 rounded-full overflow-hidden mb-3">
                     <div className="bg-green-500 h-full transition-all duration-1000 ease-out" style={{ width: `${blockProgressRate}%` }} />
                   </div>
                   <div className="text-xs text-muted-foreground bg-muted/50 p-2.5 rounded-lg flex items-start gap-2 border border-border font-medium">
-                    <Info className="w-4 h-4 mt-0.5 shrink-0" /><span className="leading-relaxed">範圍涵蓋：{blockCategoriesIncluded || "無"}</span>
+                    <Info className="w-4 h-4 mt-0.5 shrink-0" /><span className="leading-relaxed">Covers: {blockCategoriesIncluded || "None"}</span>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             <div className="glass-heavy p-6 rounded-2xl border border-border/60 shadow-mac">
-              <h3 className="text-lg font-black text-foreground mb-5 flex items-center gap-2"><Activity className="w-5 h-5 text-blue-500" /> 各科目獨立進度追蹤</h3>
+              <h3 className="text-lg font-black text-foreground mb-5 flex items-center gap-2"><Activity className="w-5 h-5 text-blue-500" /> Progress by Subject</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-5">
                 {subjectStats.slice(0, 16).map(stat => (
                   <div key={stat.category} className="space-y-2">
@@ -183,8 +183,8 @@ export default function Home() {
             <Tabs defaultValue="list" className="w-full">
               <div className="flex justify-between items-end mb-4 mt-8">
                 <TabsList className="p-1 rounded-xl">
-                  <TabsTrigger value="list" className="font-bold text-sm px-5 py-1.5">📝 互動列表</TabsTrigger>
-                  <TabsTrigger value="calendar" className="font-bold text-sm px-5 py-1.5">📅 戰略週曆</TabsTrigger>
+                  <TabsTrigger value="list" className="font-bold text-sm px-5 py-1.5">List View</TabsTrigger>
+                  <TabsTrigger value="calendar" className="font-bold text-sm px-5 py-1.5">Calendar</TabsTrigger>
                 </TabsList>
               </div>
               <TabsContent value="list" className="glass-heavy border border-border/60 rounded-2xl shadow-mac mt-0 p-5 table-container">

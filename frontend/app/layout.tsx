@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Med Tracker",
-  description: "114-2 學期 臨床醫學進度追蹤系統",
+  description: "2026 Spring Clinical Medicine Progress Tracker",
 };
 
 export default function RootLayout({

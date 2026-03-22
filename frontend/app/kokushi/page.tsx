@@ -5,19 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 const statCards = [
-  { label: "總科目數", value: "--" },
-  { label: "已完成", value: "--" },
-  { label: "進行中", value: "--" },
-  { label: "距國考天數", value: "--" },
+  { label: "Total Subjects", value: "--" },
+  { label: "Completed", value: "--" },
+  { label: "In Progress", value: "--" },
+  { label: "Days to Exam", value: "--" },
 ];
 
 export default function KokushiPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">醫師國考追蹤</h1>
+        <h1 className="text-2xl font-bold text-foreground">Board Exam Tracker</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          追蹤各科複習進度，掌握國考備考狀況
+          Track review progress across all subjects
         </p>
       </div>
 
@@ -39,16 +39,16 @@ export default function KokushiPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <CardTitle className="text-base">科目列表</CardTitle>
+            <CardTitle className="text-base">Subjects</CardTitle>
             <Badge variant="secondary">Coming Soon</Badge>
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-16 text-center gap-3 text-muted-foreground">
             <GraduationCap className="h-12 w-12 opacity-30" />
-            <p className="text-sm font-medium">科目設定尚未完成</p>
+            <p className="text-sm font-medium">Subject setup not complete</p>
             <p className="text-xs opacity-70">
-              國考科目與複習紀錄功能正在建置中，敬請期待
+              Subject and review tracking features are coming soon
             </p>
           </div>
         </CardContent>

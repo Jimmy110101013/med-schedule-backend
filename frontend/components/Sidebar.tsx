@@ -8,9 +8,9 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { icon: BookOpen, label: "週課表儀表板", route: "/" },
-  { icon: GraduationCap, label: "醫師國考追蹤", route: "/kokushi" },
-  { icon: Settings, label: "管理設定", route: "/admin" },
+  { icon: BookOpen, label: "Dashboard", route: "/" },
+  { icon: GraduationCap, label: "Board Exam", route: "/kokushi" },
+  { icon: Settings, label: "Settings", route: "/admin" },
 ];
 
 export default function Sidebar() {

@@ -41,14 +41,14 @@ export function useDashboardData() {
         setRules(rulesData);
         setLoading(false);
       })
-      .catch(() => toast.error("系統連線異常"));
+      .catch(() => toast.error("Connection error"));
   }, []);
 
   const handleUpdateCourse = async (courseId: number, updates: Partial<Course>) => {
     setCourses(prev => prev.map(c => c.id === courseId ? { ...c, ...updates } : c));
     try {
       await apiUpdateCourse(courseId, updates);
-    } catch { toast.error("儲存失敗"); }
+    } catch { toast.error("Save failed"); }
   };
 
   const allExams = useMemo(

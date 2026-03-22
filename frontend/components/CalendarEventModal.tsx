@@ -92,7 +92,7 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
         <div className="px-4 py-3 space-y-4 max-h-[60vh] overflow-y-auto">
           {/* Attendance */}
           <div>
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1.5 block">出席狀態</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1.5 block">Attendance</label>
             <select
               value={course.attendance}
               onChange={(e) => onUpdate(course.id, { attendance: e.target.value })}
@@ -104,7 +104,7 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
 
           {/* Study Progress */}
           <div>
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2 block">內化進度</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2 block">Study Progress</label>
             <div className="flex items-center gap-4">
               {PROGRESS_TYPES.map(type => {
                 const checked = Array.isArray(course.study_progress) && course.study_progress.includes(type);
@@ -132,11 +132,11 @@ export default function CalendarEventModal({ course, position, onUpdate, onClose
 
           {/* Notes */}
           <div>
-            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1.5 block">考點筆記</label>
+            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1.5 block">Notes</label>
             <textarea
               value={localNotes}
               onChange={(e) => handleNotesChange(e.target.value)}
-              placeholder="記錄考試重點…"
+              placeholder="Add notes..."
               rows={3}
               className="w-full bg-card border-2 border-border text-sm font-medium rounded-lg px-3 py-2 focus:ring-2 focus:ring-foreground outline-none resize-y text-foreground placeholder:text-muted-foreground"
             />

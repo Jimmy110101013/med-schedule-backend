@@ -126,7 +126,7 @@ const CourseCard = memo(function CourseCard({
               : "bg-orange-50/50 border-orange-200 text-orange-700 hover:bg-orange-100 dark:bg-orange-950/20 dark:border-orange-800 dark:text-orange-300"
           }`}
         >
-          <option value="">(系統判定失敗)</option>
+          <option value="">(Unmatched)</option>
           {Array.from(new Map(allExams.map((exam) => [exam.topic, exam])).values()).map((exam) => (
             <option key={exam.id} value={exam.topic}>
               {exam.topic}
@@ -207,7 +207,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 glass p-4 rounded-xl border border-border/60 shadow-mac">
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
-              <span className="text-sm font-bold text-foreground/80 shrink-0">科目：</span>
+              <span className="text-sm font-bold text-foreground/80 shrink-0">Subject:</span>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
@@ -215,7 +215,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
               >
                 {uniqueCategories.map((cat) => (
                   <option key={cat} value={cat}>
-                    {cat === "All" ? "顯示所有科目" : cat}
+                    {cat === "All" ? "All Subjects" : cat}
                   </option>
                 ))}
               </select>
@@ -223,7 +223,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
 
             <div className="flex items-center gap-2 sm:border-l-2 sm:border-border sm:pl-4">
               <Target className="w-4 h-4 text-orange-500 shrink-0" />
-              <span className="text-sm font-bold text-foreground/80 shrink-0">考試目標：</span>
+              <span className="text-sm font-bold text-foreground/80 shrink-0">Exam Target:</span>
               <select
                 value={selectedExam}
                 onChange={(e) => setSelectedExam(e.target.value)}
@@ -231,7 +231,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
               >
                 {uniqueExams.map((exam) => (
                   <option key={exam as string} value={exam as string}>
-                    {exam === "All" ? "顯示所有考試範圍" : exam}
+                    {exam === "All" ? "All Exams" : exam}
                   </option>
                 ))}
               </select>
@@ -240,11 +240,11 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
           <div className="flex items-center gap-3 bg-card px-4 py-2 rounded-lg border border-border shadow-sm sm:ml-auto">
             <Activity className="w-4 h-4 text-green-500" />
             <span className="text-sm font-bold text-muted-foreground">
-              共 <span className="text-foreground">{totalFiltered}</span> 堂
+              Total: <span className="text-foreground">{totalFiltered}</span>
             </span>
             <span className="text-muted-foreground/50">|</span>
             <span className="text-sm font-bold text-muted-foreground">
-              已掌握 <span className="text-green-600 dark:text-green-400">{studiedFiltered}</span> 堂
+              Mastered: <span className="text-green-600 dark:text-green-400">{studiedFiltered}</span>
             </span>
             <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100 text-sm px-2 py-0.5 shadow-sm">
               {progressRate}%
@@ -258,7 +258,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
         <div className="space-y-3">
           {filteredCourses.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground text-base font-bold">
-              {focusMode ? "🎉 太棒了！目前沒有高危課程" : "這個篩選條件下沒有找到任何課程喔！"}
+              {focusMode ? "All caught up! No at-risk courses." : "No courses match this filter."}
             </div>
           ) : (
             filteredCourses.map((course) => (
@@ -278,13 +278,13 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
-                <TableHead className="w-[120px] text-sm font-bold text-foreground/80 py-4">日期</TableHead>
-                <TableHead className="w-[120px] text-sm font-bold text-foreground/80 py-4">時段</TableHead>
-                <TableHead className="w-[160px] text-sm font-bold text-foreground/80 py-4">科目</TableHead>
-                <TableHead className="text-sm font-bold text-foreground/80 py-4">課程主題</TableHead>
-                <TableHead className="w-[240px] text-sm font-bold text-foreground/80 py-4">對應考試 (可點擊微調)</TableHead>
-                <TableHead className="w-[150px] text-sm font-bold text-foreground/80 py-4">出席狀態</TableHead>
-                <TableHead className="w-[220px] text-sm font-bold text-foreground/80 py-4">內化進度</TableHead>
+                <TableHead className="w-[120px] text-sm font-bold text-foreground/80 py-4">Date</TableHead>
+                <TableHead className="w-[120px] text-sm font-bold text-foreground/80 py-4">Time</TableHead>
+                <TableHead className="w-[160px] text-sm font-bold text-foreground/80 py-4">Subject</TableHead>
+                <TableHead className="text-sm font-bold text-foreground/80 py-4">Topic</TableHead>
+                <TableHead className="w-[240px] text-sm font-bold text-foreground/80 py-4">Exam Block (click to adjust)</TableHead>
+                <TableHead className="w-[150px] text-sm font-bold text-foreground/80 py-4">Attendance</TableHead>
+                <TableHead className="w-[220px] text-sm font-bold text-foreground/80 py-4">Study Progress</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -325,7 +325,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
                             : "bg-orange-50/50 border-orange-200 text-orange-700 hover:bg-orange-100 dark:bg-orange-950/20 dark:border-orange-800 dark:text-orange-300"
                         }`}
                       >
-                        <option value="">(系統判定失敗)</option>
+                        <option value="">(Unmatched)</option>
                         {Array.from(new Map(allExams.map((exam) => [exam.topic, exam])).values()).map((exam) => (
                           <option key={exam.id} value={exam.topic}>
                             {exam.topic}
@@ -355,7 +355,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
               {filteredCourses.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-12 text-muted-foreground text-lg font-bold">
-                    {focusMode ? "🎉 太棒了！目前沒有高危課程" : "這個篩選條件下沒有找到任何課程喔！"}
+                    {focusMode ? "All caught up! No at-risk courses." : "No courses match this filter."}
                   </TableCell>
                 </TableRow>
               )}
