@@ -15,7 +15,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import InteractiveTable from "@/components/InteractiveTable";
 import type { Course } from "@/components/InteractiveTable";
 import CalendarEventModal from "@/components/CalendarEventModal";
-import { useDashboardData, isStudied } from "@/hooks/useDashboardData";
+import { useDashboardData, isStudied, isMastered } from "@/hooks/useDashboardData";
 import { EXCLUDED_FROM_FOCUS } from "@/lib/constants";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
@@ -68,7 +68,7 @@ export default function Home() {
       blockCourses = enrichedCourses.filter(c => c.target_exam === nextExam.topic && !["Exam", "國考複習", "PBL"].includes(c.category));
     }
     const blockTotal = blockCourses.length;
-    const blockStudied = blockCourses.filter(c => isStudied(c.study_progress)).length;
+    const blockStudied = blockCourses.filter(c => isMastered(c)).length;
     const blockProgressRate = blockTotal > 0 ? (blockStudied / blockTotal) * 100 : 0;
     const blockCategoriesIncluded = Array.from(new Set(blockCourses.map(c => c.category))).join("、");
     return { nextExam, blockCourses, daysToExam, blockProgressRate, blockStudied, blockTotal, blockCategoriesIncluded };

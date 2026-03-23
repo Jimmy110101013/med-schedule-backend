@@ -3,11 +3,11 @@
 import { useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import type { Course } from "@/components/InteractiveTable";
-import { isStudied, PROGRESS_TYPES, EXCLUDED_FROM_FOCUS } from "@/lib/constants";
+import { isStudied, isMastered, PROGRESS_TYPES, EXCLUDED_FROM_FOCUS } from "@/lib/constants";
 import { getCourses, updateCourse as apiUpdateCourse, getExamRules } from "@/lib/api";
 import type { ExamRule } from "@/lib/api";
 
-export { isStudied };
+export { isStudied, isMastered };
 export type { ExamRule };
 
 const getExamTargetCategories = (examTopic: string, courseTopic: string = "", rules: ExamRule[]): string[] => {
@@ -78,7 +78,7 @@ export function useDashboardData() {
     .map(category => {
       const catCourses = courses.filter(c => c.category === category);
       const total = catCourses.length;
-      const studied = catCourses.filter(c => isStudied(c.study_progress)).length;
+      const studied = catCourses.filter(c => isMastered(c)).length;
       return { category, total, studied, rate: total > 0 ? (studied / total) * 100 : 0 };
     }).sort((a, b) => b.total - a.total),
     [courses]
@@ -88,7 +88,8 @@ export function useDashboardData() {
     const [startT, endT] = course.time_slot.split("-");
     let bgColor = "var(--fc-default)";
     if (course.category === "Exam") bgColor = "var(--fc-exam)";
-    else if (course.category === "PBL") bgColor = "var(--fc-pbl)";
+    else if (course.category === "PBL") bgColor = isMastered(course) ? "var(--fc-studied)" : "var(--fc-pbl)";
+    else if (course.category === "Skill") bgColor = isMastered(course) ? "var(--fc-studied)" : "var(--fc-default)";
     else if (isStudied(course.study_progress)) bgColor = "var(--fc-studied)";
     else if (["現場出席", "錄影補課"].includes(course.attendance)) bgColor = "var(--fc-attended)";
     return { id: String(course.id), title: `[${course.category}] ${course.topic}`, start: `${course.date}T${startT}`, end: `${course.date}T${endT}`, backgroundColor: bgColor, borderColor: bgColor, textColor: "#f0ebe5" };

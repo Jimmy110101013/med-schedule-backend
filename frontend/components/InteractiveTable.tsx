@@ -1,5 +1,5 @@
 import { useState, useMemo, memo } from "react";
-import { ATTENDANCE_OPTIONS, PROGRESS_TYPES, isStudied } from "@/lib/constants";
+import { ATTENDANCE_OPTIONS, PROGRESS_TYPES, isStudied, isMastered, ATTENDANCE_ONLY_CATEGORIES } from "@/lib/constants";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -90,7 +90,7 @@ const CourseCard = memo(function CourseCard({
   onUpdateCourse: (id: number, updates: Partial<Course>) => void;
   onToggle: (course: Course, type: string, checked: boolean) => void;
 }) {
-  const courseIsStudied = isStudied(course.study_progress);
+  const courseIsStudied = isMastered(course);
 
   return (
     <div
@@ -148,8 +148,10 @@ const CourseCard = memo(function CourseCard({
         ))}
       </select>
 
-      {/* Progress */}
-      <ProgressCheckboxes course={course} onToggle={onToggle} />
+      {/* Progress — hidden for attendance-only categories */}
+      {!ATTENDANCE_ONLY_CATEGORIES.includes(course.category) && (
+        <ProgressCheckboxes course={course} onToggle={onToggle} />
+      )}
 
       {/* Notes preview */}
       {course.notes && (
@@ -187,7 +189,7 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
   );
 
   const totalFiltered = filteredCourses.length;
-  const studiedFiltered = filteredCourses.filter((c) => isStudied(c.study_progress)).length;
+  const studiedFiltered = filteredCourses.filter((c) => isMastered(c)).length;
   const progressRate = totalFiltered > 0 ? Math.round((studiedFiltered / totalFiltered) * 100) : 0;
 
   const handleProgressToggle = (course: Course, progressType: string, isChecked: boolean) => {
@@ -348,7 +350,11 @@ export default function InteractiveTable({ courses, allExams, onUpdateCourse, fo
                     </select>
                   </TableCell>
                   <TableCell className="py-4">
-                    <ProgressCheckboxes course={course} onToggle={handleProgressToggle} />
+                    {ATTENDANCE_ONLY_CATEGORIES.includes(course.category) ? (
+                      <span className="text-muted-foreground/50 text-base font-bold">-</span>
+                    ) : (
+                      <ProgressCheckboxes course={course} onToggle={handleProgressToggle} />
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
