@@ -44,7 +44,11 @@ def import_pdf_to_db(pdf_path: str):
             # 🚀 關鍵修改：源頭清洗 (Data Sanitization)
             # 強制將科目名稱去頭去尾空白，並轉為「首字母大寫」的標準格式
             # 例如: "nuclear medicine" -> "Nuclear Medicine"
-            clean_category = validated_data.category.strip().title() if validated_data.category else "Unknown"
+            # 特殊類別（PBL 等縮寫）保留原始大小寫
+            PRESERVE_CASE_CATEGORIES = {"PBL", "Skill", "Exam", "Holiday", "國考複習"}
+            raw_category = validated_data.category.strip() if validated_data.category else "Unknown"
+            preserve_match = {c for c in PRESERVE_CASE_CATEGORIES if c.upper() == raw_category.upper()}
+            clean_category = preserve_match.pop() if preserve_match else raw_category.title()
             
             # 3. 轉化為 SQLAlchemy 實體模型
             db_course = Course(
