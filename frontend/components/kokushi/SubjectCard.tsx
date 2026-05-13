@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronRight, Plus, Trash2, Minus, BookOpen, Video, FileQuestion, Box } from "lucide-react";
+import { Check, ChevronRight, Plus, Trash2, Minus, BookOpen, Video, FileQuestion, Box } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   type Subject,
   type Subtopic,
-  type SubtopicStatus,
   type Resource,
   type ResourceType,
-  updateSubtopic,
+  type ChecklistField,
+  setSubtopicCheck,
   getResources,
   createResource,
   updateResource,
@@ -24,23 +23,11 @@ interface Props {
   onSubtopicChanged: () => void;
 }
 
-const STATUS_LABEL: Record<SubtopicStatus, string> = {
-  not_started: "未開始",
-  in_progress: "進行中",
-  completed: "已完成",
-};
-
-const STATUS_TEXT_COLOR: Record<SubtopicStatus, string> = {
-  not_started: "text-muted-foreground",
-  in_progress: "text-sky-400",
-  completed: "text-emerald-400",
-};
-
-const STATUS_VARIANT: Record<SubtopicStatus, "secondary" | "default" | "outline"> = {
-  not_started: "outline",
-  in_progress: "secondary",
-  completed: "default",
-};
+const CHECKLIST_ITEMS: { field: ChecklistField; label: string }[] = [
+  { field: "first_pass_done", label: "一刷" },
+  { field: "second_pass_done", label: "二刷" },
+  { field: "past_exams_done", label: "考古" },
+];
 
 const RESOURCE_ICON: Record<ResourceType, typeof BookOpen> = {
   book: BookOpen,
@@ -56,98 +43,75 @@ const RESOURCE_LABEL: Record<ResourceType, string> = {
   other: "Other",
 };
 
-function nextStatus(s: SubtopicStatus): SubtopicStatus {
-  if (s === "not_started") return "in_progress";
-  if (s === "in_progress") return "completed";
-  return "not_started";
-}
-
 function progressColor(pct: number): string {
   if (pct === 0) return "text-muted-foreground";
   if (pct === 100) return "text-emerald-400";
   return "text-sky-400";
 }
 
+interface ChecklistChipProps {
+  label: string;
+  checked: boolean;
+  onClick: () => void;
+}
+
+function ChecklistChip({ label, checked, onClick }: ChecklistChipProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors select-none",
+        checked
+          ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25"
+          : "bg-transparent border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+      )}
+    >
+      <Check className={cn("h-3 w-3 transition-opacity", checked ? "opacity-100" : "opacity-30")} />
+      {label}
+    </button>
+  );
+}
+
 interface SubtopicCardProps {
   subtopic: Subtopic;
   onChange: (sub: Subtopic) => void;
-  onPersist: (id: number, updates: { status?: SubtopicStatus; progress_percent?: number }) => Promise<void>;
 }
 
-function SubtopicCard({ subtopic, onChange, onPersist }: SubtopicCardProps) {
-  const [open, setOpen] = useState(false);
-
-  async function cycleStatus(e: React.MouseEvent) {
-    e.stopPropagation();
-    const newStatus = nextStatus(subtopic.status);
-    const newPct =
-      newStatus === "completed" ? 100 : newStatus === "not_started" ? 0 : subtopic.progress_percent;
-    onChange({ ...subtopic, status: newStatus, progress_percent: newPct });
-    await onPersist(subtopic.id, { status: newStatus });
-  }
-
-  async function handleSlider(value: number) {
-    const p = Math.max(0, Math.min(100, value));
-    const newStatus: SubtopicStatus =
-      p === 0 ? "not_started" : p === 100 ? "completed" : "in_progress";
-    onChange({ ...subtopic, progress_percent: p, status: newStatus });
-    await onPersist(subtopic.id, { progress_percent: p });
+function SubtopicCard({ subtopic, onChange }: SubtopicCardProps) {
+  async function toggle(field: ChecklistField) {
+    const currentValue = subtopic[field];
+    const newValue = !currentValue;
+    const optimistic: Subtopic = { ...subtopic, [field]: newValue };
+    const count =
+      (optimistic.first_pass_done ? 1 : 0) +
+      (optimistic.second_pass_done ? 1 : 0) +
+      (optimistic.past_exams_done ? 1 : 0);
+    optimistic.status = count === 0 ? "not_started" : count === 3 ? "completed" : "in_progress";
+    optimistic.progress_percent = count === 0 ? 0 : count === 3 ? 100 : Math.round((count / 3) * 100);
+    onChange(optimistic);
+    const result = await setSubtopicCheck(subtopic.id, field, newValue);
+    onChange({ ...optimistic, status: result.status, progress_percent: result.progress_percent });
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden bg-card/40">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full text-left px-4 py-3 hover:bg-accent/40 transition-colors"
-      >
-        <div className="flex items-center justify-between gap-2">
-          <h4 className="font-medium text-sm text-foreground truncate" title={subtopic.name}>
-            {subtopic.name}
-          </h4>
-          <ChevronRight
-            className={cn(
-              "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
-              open && "rotate-90"
-            )}
+    <div className="border rounded-lg px-4 py-3 bg-card/40">
+      <h4 className="font-medium text-sm text-foreground truncate" title={subtopic.name}>
+        {subtopic.name}
+      </h4>
+      <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+        {CHECKLIST_ITEMS.map(({ field, label }) => (
+          <ChecklistChip
+            key={field}
+            label={label}
+            checked={subtopic[field]}
+            onClick={() => void toggle(field)}
           />
-        </div>
-        <div className="mt-1 flex items-center gap-1.5 text-xs">
-          <span className={STATUS_TEXT_COLOR[subtopic.status]}>
-            {STATUS_LABEL[subtopic.status]}
-          </span>
-          <span className="text-muted-foreground">·</span>
-          <span className={cn("tabular-nums", progressColor(subtopic.progress_percent))}>
-            {subtopic.progress_percent}%
-          </span>
-        </div>
-      </button>
-
-      {open && (
-        <div className="px-4 pb-3 pt-2 border-t bg-background/40 space-y-2">
-          <div className="flex items-center gap-3">
-            <Badge
-              variant={STATUS_VARIANT[subtopic.status]}
-              className="cursor-pointer select-none"
-              onClick={cycleStatus}
-            >
-              {STATUS_LABEL[subtopic.status]}
-            </Badge>
-            <input
-              type="range"
-              min={0}
-              max={100}
-              step={5}
-              value={subtopic.progress_percent}
-              onChange={(e) => void handleSlider(Number(e.target.value))}
-              className="flex-1 accent-primary"
-            />
-            <span className="text-xs text-muted-foreground tabular-nums w-9 text-right">
-              {subtopic.progress_percent}%
-            </span>
-          </div>
-        </div>
-      )}
+        ))}
+        <span className={cn("ml-auto text-xs tabular-nums", progressColor(subtopic.progress_percent))}>
+          {subtopic.progress_percent}%
+        </span>
+      </div>
     </div>
   );
 }
@@ -167,23 +131,14 @@ export function SubjectCard({ subject, onSubtopicChanged }: Props) {
     }
   }, [open, resources, subject.id]);
 
-  const completedCount = localSubtopics.filter((s) => s.status === "completed").length;
   const totalCount = localSubtopics.length;
-  const avgProgress =
-    totalCount === 0
-      ? 0
-      : Math.round(localSubtopics.reduce((sum, s) => sum + s.progress_percent, 0) / totalCount);
-
-  async function persistSubtopic(
-    id: number,
-    updates: { status?: SubtopicStatus; progress_percent?: number }
-  ) {
-    await updateSubtopic(id, updates);
-    onSubtopicChanged();
-  }
+  const completedCount = localSubtopics.filter((s) => s.status === "completed").length;
+  const completionPct =
+    totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
 
   function updateLocalSubtopic(updated: Subtopic) {
     setLocalSubtopics((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    onSubtopicChanged();
   }
 
   async function handleAddResource(type: ResourceType) {
@@ -231,13 +186,20 @@ export function SubjectCard({ subject, onSubtopicChanged }: Props) {
         <div className="mt-1 flex items-center gap-2 text-sm">
           <span className="text-muted-foreground tabular-nums">{totalCount} 子主題</span>
           <span className="text-muted-foreground">·</span>
-          <span className="text-muted-foreground tabular-nums">
-            {completedCount} 完成
-          </span>
+          <span className="text-muted-foreground tabular-nums">{completedCount} 完成</span>
           <span className="text-muted-foreground">·</span>
-          <span className={cn("tabular-nums font-medium", progressColor(avgProgress))}>
-            {avgProgress}%
+          <span className={cn("tabular-nums font-medium", progressColor(completionPct))}>
+            {completionPct}%
           </span>
+        </div>
+        <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div
+            className={cn(
+              "h-full transition-all",
+              completionPct === 100 ? "bg-emerald-500" : "bg-sky-500"
+            )}
+            style={{ width: `${completionPct}%` }}
+          />
         </div>
       </button>
 
@@ -249,7 +211,6 @@ export function SubjectCard({ subject, onSubtopicChanged }: Props) {
                 key={sub.id}
                 subtopic={sub}
                 onChange={updateLocalSubtopic}
-                onPersist={persistSubtopic}
               />
             ))}
           </div>

@@ -1,5 +1,6 @@
 export type SubtopicStatus = "not_started" | "in_progress" | "completed";
 export type ResourceType = "book" | "video" | "qbank" | "other";
+export type ChecklistField = "first_pass_done" | "second_pass_done" | "past_exams_done";
 
 export interface Subtopic {
   id: number;
@@ -9,6 +10,9 @@ export interface Subtopic {
   status: SubtopicStatus;
   progress_percent: number;
   notes: string | null;
+  first_pass_done: boolean;
+  second_pass_done: boolean;
+  past_exams_done: boolean;
 }
 
 export interface Subject {
@@ -64,6 +68,18 @@ interface SubtopicRow {
   status: SubtopicStatus;
   progress_percent: number;
   notes: string | null;
+  first_pass_done: number;
+  second_pass_done: number;
+  past_exams_done: number;
+}
+
+function rowToSubtopic(r: SubtopicRow): Subtopic {
+  return {
+    ...r,
+    first_pass_done: !!r.first_pass_done,
+    second_pass_done: !!r.second_pass_done,
+    past_exams_done: !!r.past_exams_done,
+  };
 }
 
 export async function getSubjects(): Promise<Subject[]> {
@@ -73,14 +89,46 @@ export async function getSubjects(): Promise<Subject[]> {
     "SELECT id, name, order_index FROM kokushi_subjects ORDER BY order_index, id"
   );
   const subtopicRows = await db.select<SubtopicRow[]>(
-    "SELECT id, subject_id, name, order_index, status, progress_percent, notes FROM kokushi_subtopics ORDER BY subject_id, order_index, id"
+    "SELECT id, subject_id, name, order_index, status, progress_percent, notes, first_pass_done, second_pass_done, past_exams_done FROM kokushi_subtopics ORDER BY subject_id, order_index, id"
   );
   const bySubject = new Map<number, Subtopic[]>();
-  for (const s of subtopicRows) {
+  for (const r of subtopicRows) {
+    const s = rowToSubtopic(r);
     if (!bySubject.has(s.subject_id)) bySubject.set(s.subject_id, []);
     bySubject.get(s.subject_id)!.push(s);
   }
   return subjectRows.map((s) => ({ ...s, subtopics: bySubject.get(s.id) ?? [] }));
+}
+
+export async function setSubtopicCheck(
+  id: number,
+  field: ChecklistField,
+  value: boolean
+): Promise<{ status: SubtopicStatus; progress_percent: number }> {
+  ensureTauri();
+  const db = await getDb();
+  await db.execute(
+    `UPDATE kokushi_subtopics SET ${field} = ?, updated_at = datetime('now') WHERE id = ?`,
+    [value ? 1 : 0, id]
+  );
+  const rows = await db.select<{
+    first_pass_done: number;
+    second_pass_done: number;
+    past_exams_done: number;
+  }[]>(
+    "SELECT first_pass_done, second_pass_done, past_exams_done FROM kokushi_subtopics WHERE id = ?",
+    [id]
+  );
+  const r = rows[0];
+  const count = (r?.first_pass_done ?? 0) + (r?.second_pass_done ?? 0) + (r?.past_exams_done ?? 0);
+  const status: SubtopicStatus =
+    count === 0 ? "not_started" : count === 3 ? "completed" : "in_progress";
+  const progress_percent = count === 0 ? 0 : count === 3 ? 100 : Math.round((count / 3) * 100);
+  await db.execute(
+    "UPDATE kokushi_subtopics SET status = ?, progress_percent = ? WHERE id = ?",
+    [status, progress_percent, id]
+  );
+  return { status, progress_percent };
 }
 
 export interface SubtopicUpdate {

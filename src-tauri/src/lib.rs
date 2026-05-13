@@ -15,6 +15,12 @@ pub fn run() {
             sql: include_str!("../migrations/002_kokushi.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 3,
+            description: "add 一刷/二刷/考古 checklist columns and default exam date",
+            sql: include_str!("../migrations/003_kokushi_checklist.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()
