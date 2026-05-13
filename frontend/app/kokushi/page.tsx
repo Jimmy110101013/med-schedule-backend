@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SubjectCard } from "@/components/kokushi/SubjectCard";
 import { ActivityHeatmap } from "@/components/kokushi/ActivityHeatmap";
 import { SubjectRadar } from "@/components/kokushi/SubjectRadar";
+import { TodayTarget } from "@/components/kokushi/TodayTarget";
 import {
   type Subject,
   type Subtopic,
@@ -14,8 +15,10 @@ import {
   getActivityMap,
   getExamDate,
   getSubjects,
+  getTodayTarget,
   isTauri,
   setExamDate,
+  setTodayTarget,
   todayISO,
 } from "@/lib/kokushi";
 
@@ -30,6 +33,7 @@ export default function KokushiPage() {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [examDate, setExamDateState] = useState<string | null>(null);
   const [activityMap, setActivityMap] = useState<Map<string, number>>(new Map());
+  const [targetSubtopicId, setTargetSubtopicId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingDate, setEditingDate] = useState(false);
 
@@ -38,15 +42,22 @@ export default function KokushiPage() {
   }, []);
 
   const loadAll = useCallback(async () => {
-    const [subs, date, activity] = await Promise.all([
+    const [subs, date, activity, target] = await Promise.all([
       getSubjects(),
       getExamDate(),
       getActivityMap(),
+      getTodayTarget(),
     ]);
     setSubjects(subs);
     setExamDateState(date);
     setActivityMap(activity);
+    setTargetSubtopicId(target);
     setLoading(false);
+  }, []);
+
+  const handleTargetChange = useCallback(async (id: number | null) => {
+    setTargetSubtopicId(id);
+    await setTodayTarget(id);
   }, []);
 
   useEffect(() => {
@@ -165,8 +176,15 @@ export default function KokushiPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-        <ActivityHeatmap activityMap={activityMap} weeks={18} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="flex flex-col gap-4">
+          <ActivityHeatmap activityMap={activityMap} weeks={18} />
+          <TodayTarget
+            subjects={subjects}
+            targetSubtopicId={targetSubtopicId}
+            onChange={(id) => void handleTargetChange(id)}
+          />
+        </div>
         <SubjectRadar subjects={subjects} />
       </div>
 

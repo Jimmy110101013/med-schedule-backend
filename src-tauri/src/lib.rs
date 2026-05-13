@@ -33,6 +33,12 @@ pub fn run() {
             sql: include_str!("../migrations/005_kokushi_check_log.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 6,
+            description: "add kokushi_daily_target for today's focus subtopic",
+            sql: include_str!("../migrations/006_kokushi_daily_target.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

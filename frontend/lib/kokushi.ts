@@ -266,6 +266,29 @@ export async function setExamDate(date: string | null): Promise<void> {
   );
 }
 
+export async function getTodayTarget(): Promise<number | null> {
+  ensureTauri();
+  const db = await getDb();
+  const rows = await db.select<{ subtopic_id: number }[]>(
+    "SELECT subtopic_id FROM kokushi_daily_target WHERE date = ?",
+    [todayISO()]
+  );
+  return rows[0]?.subtopic_id ?? null;
+}
+
+export async function setTodayTarget(subtopicId: number | null): Promise<void> {
+  ensureTauri();
+  const db = await getDb();
+  if (subtopicId === null) {
+    await db.execute("DELETE FROM kokushi_daily_target WHERE date = ?", [todayISO()]);
+    return;
+  }
+  await db.execute(
+    "INSERT INTO kokushi_daily_target (date, subtopic_id) VALUES (?, ?) ON CONFLICT(date) DO UPDATE SET subtopic_id = excluded.subtopic_id",
+    [todayISO(), subtopicId]
+  );
+}
+
 export async function getActivityMap(daysBack: number = 120): Promise<Map<string, number>> {
   ensureTauri();
   const db = await getDb();
