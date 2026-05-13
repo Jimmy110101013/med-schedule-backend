@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronRight, Plus, Trash2, Minus, BookOpen, Video, FileQuestion, Box } from "lucide-react";
+import { ChevronRight, Plus, Trash2, Minus, BookOpen, Video, FileQuestion, Box } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   type Subject,
   type Subtopic,
@@ -24,9 +25,15 @@ interface Props {
 }
 
 const STATUS_LABEL: Record<SubtopicStatus, string> = {
-  not_started: "Not started",
-  in_progress: "In progress",
-  completed: "Completed",
+  not_started: "未開始",
+  in_progress: "進行中",
+  completed: "已完成",
+};
+
+const STATUS_TEXT_COLOR: Record<SubtopicStatus, string> = {
+  not_started: "text-muted-foreground",
+  in_progress: "text-sky-400",
+  completed: "text-emerald-400",
 };
 
 const STATUS_VARIANT: Record<SubtopicStatus, "secondary" | "default" | "outline"> = {
@@ -55,6 +62,96 @@ function nextStatus(s: SubtopicStatus): SubtopicStatus {
   return "not_started";
 }
 
+function progressColor(pct: number): string {
+  if (pct === 0) return "text-muted-foreground";
+  if (pct === 100) return "text-emerald-400";
+  return "text-sky-400";
+}
+
+interface SubtopicCardProps {
+  subtopic: Subtopic;
+  onChange: (sub: Subtopic) => void;
+  onPersist: (id: number, updates: { status?: SubtopicStatus; progress_percent?: number }) => Promise<void>;
+}
+
+function SubtopicCard({ subtopic, onChange, onPersist }: SubtopicCardProps) {
+  const [open, setOpen] = useState(false);
+
+  async function cycleStatus(e: React.MouseEvent) {
+    e.stopPropagation();
+    const newStatus = nextStatus(subtopic.status);
+    const newPct =
+      newStatus === "completed" ? 100 : newStatus === "not_started" ? 0 : subtopic.progress_percent;
+    onChange({ ...subtopic, status: newStatus, progress_percent: newPct });
+    await onPersist(subtopic.id, { status: newStatus });
+  }
+
+  async function handleSlider(value: number) {
+    const p = Math.max(0, Math.min(100, value));
+    const newStatus: SubtopicStatus =
+      p === 0 ? "not_started" : p === 100 ? "completed" : "in_progress";
+    onChange({ ...subtopic, progress_percent: p, status: newStatus });
+    await onPersist(subtopic.id, { progress_percent: p });
+  }
+
+  return (
+    <div className="border rounded-lg overflow-hidden bg-card/40">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full text-left px-4 py-3 hover:bg-accent/40 transition-colors"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <h4 className="font-medium text-sm text-foreground truncate" title={subtopic.name}>
+            {subtopic.name}
+          </h4>
+          <ChevronRight
+            className={cn(
+              "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+              open && "rotate-90"
+            )}
+          />
+        </div>
+        <div className="mt-1 flex items-center gap-1.5 text-xs">
+          <span className={STATUS_TEXT_COLOR[subtopic.status]}>
+            {STATUS_LABEL[subtopic.status]}
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className={cn("tabular-nums", progressColor(subtopic.progress_percent))}>
+            {subtopic.progress_percent}%
+          </span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="px-4 pb-3 pt-2 border-t bg-background/40 space-y-2">
+          <div className="flex items-center gap-3">
+            <Badge
+              variant={STATUS_VARIANT[subtopic.status]}
+              className="cursor-pointer select-none"
+              onClick={cycleStatus}
+            >
+              {STATUS_LABEL[subtopic.status]}
+            </Badge>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={subtopic.progress_percent}
+              onChange={(e) => void handleSlider(Number(e.target.value))}
+              className="flex-1 accent-primary"
+            />
+            <span className="text-xs text-muted-foreground tabular-nums w-9 text-right">
+              {subtopic.progress_percent}%
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function SubjectCard({ subject, onSubtopicChanged }: Props) {
   const [open, setOpen] = useState(false);
   const [localSubtopics, setLocalSubtopics] = useState<Subtopic[]>(subject.subtopics);
@@ -77,35 +174,16 @@ export function SubjectCard({ subject, onSubtopicChanged }: Props) {
       ? 0
       : Math.round(localSubtopics.reduce((sum, s) => sum + s.progress_percent, 0) / totalCount);
 
-  async function handleStatusClick(subtopic: Subtopic) {
-    const newStatus = nextStatus(subtopic.status);
-    setLocalSubtopics((prev) =>
-      prev.map((s) =>
-        s.id === subtopic.id
-          ? {
-              ...s,
-              status: newStatus,
-              progress_percent:
-                newStatus === "completed" ? 100 : newStatus === "not_started" ? 0 : s.progress_percent,
-            }
-          : s
-      )
-    );
-    await updateSubtopic(subtopic.id, { status: newStatus });
+  async function persistSubtopic(
+    id: number,
+    updates: { status?: SubtopicStatus; progress_percent?: number }
+  ) {
+    await updateSubtopic(id, updates);
     onSubtopicChanged();
   }
 
-  async function handleProgressChange(subtopic: Subtopic, value: number) {
-    const p = Math.max(0, Math.min(100, value));
-    const newStatus: SubtopicStatus =
-      p === 0 ? "not_started" : p === 100 ? "completed" : "in_progress";
-    setLocalSubtopics((prev) =>
-      prev.map((s) =>
-        s.id === subtopic.id ? { ...s, progress_percent: p, status: newStatus } : s
-      )
-    );
-    await updateSubtopic(subtopic.id, { progress_percent: p });
-    onSubtopicChanged();
+  function updateLocalSubtopic(updated: Subtopic) {
+    setLocalSubtopics((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
   }
 
   async function handleAddResource(type: ResourceType) {
@@ -139,69 +217,45 @@ export function SubjectCard({ subject, onSubtopicChanged }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full px-6 py-4 flex items-center gap-4 text-left hover:bg-accent/40 transition-colors"
+        className="w-full px-6 py-4 text-left hover:bg-accent/40 transition-colors"
       >
-        {open ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-3">
-            <h3 className="font-semibold text-foreground truncate">{subject.name}</h3>
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {completedCount}/{totalCount} done
-            </span>
-          </div>
-          <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary transition-all"
-              style={{ width: `${avgProgress}%` }}
-            />
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="font-semibold text-lg text-foreground truncate">{subject.name}</h3>
+          <ChevronRight
+            className={cn(
+              "h-5 w-5 shrink-0 text-muted-foreground transition-transform",
+              open && "rotate-90"
+            )}
+          />
         </div>
-        <span className="text-xs text-muted-foreground tabular-nums w-10 text-right">
-          {avgProgress}%
-        </span>
+        <div className="mt-1 flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground tabular-nums">{totalCount} 子主題</span>
+          <span className="text-muted-foreground">·</span>
+          <span className="text-muted-foreground tabular-nums">
+            {completedCount} 完成
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className={cn("tabular-nums font-medium", progressColor(avgProgress))}>
+            {avgProgress}%
+          </span>
+        </div>
       </button>
 
       {open && (
-        <div className="border-t bg-muted/20 px-6 py-4 space-y-6">
-          <div className="space-y-2">
-            <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">
-              Subtopics
-            </h4>
-            <div className="space-y-1.5">
-              {localSubtopics.map((sub) => (
-                <div
-                  key={sub.id}
-                  className="flex items-center gap-3 py-1.5 px-2 rounded-md hover:bg-background/60"
-                >
-                  <span className="flex-1 text-sm truncate" title={sub.name}>
-                    {sub.name}
-                  </span>
-                  <Badge
-                    variant={STATUS_VARIANT[sub.status]}
-                    className="cursor-pointer select-none"
-                    onClick={() => void handleStatusClick(sub)}
-                  >
-                    {STATUS_LABEL[sub.status]}
-                  </Badge>
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    step={5}
-                    value={sub.progress_percent}
-                    onChange={(e) => void handleProgressChange(sub, Number(e.target.value))}
-                    className="w-28 accent-primary"
-                  />
-                  <span className="text-xs text-muted-foreground tabular-nums w-9 text-right">
-                    {sub.progress_percent}%
-                  </span>
-                </div>
-              ))}
-            </div>
+        <div className="border-t px-6 py-5 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {localSubtopics.map((sub) => (
+              <SubtopicCard
+                key={sub.id}
+                subtopic={sub}
+                onChange={updateLocalSubtopic}
+                onPersist={persistSubtopic}
+              />
+            ))}
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="space-y-2 pt-2 border-t">
+            <div className="flex items-center justify-between pt-3">
               <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">
                 Resources
               </h4>
