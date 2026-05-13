@@ -39,6 +39,96 @@ export interface KokushiStats {
   daysToExam: number | null;
 }
 
+export interface ActivityRow {
+  date: string;
+  count: number;
+}
+
+export interface StreakSummary {
+  current: number;
+  longest: number;
+  thisWeek: number;
+}
+
+function todayISO(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function isoDate(d: Date): string {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+async function logActivity(): Promise<void> {
+  if (!isTauri()) return;
+  const db = await getDb();
+  await db.execute(
+    "INSERT INTO kokushi_activity (date, count) VALUES (?, 1) ON CONFLICT(date) DO UPDATE SET count = count + 1",
+    [todayISO()]
+  );
+}
+
+export async function getActivityMap(daysBack: number = 120): Promise<Map<string, number>> {
+  ensureTauri();
+  const db = await getDb();
+  const cutoff = new Date();
+  cutoff.setHours(0, 0, 0, 0);
+  cutoff.setDate(cutoff.getDate() - daysBack);
+  const rows = await db.select<ActivityRow[]>(
+    "SELECT date, count FROM kokushi_activity WHERE date >= ? ORDER BY date",
+    [isoDate(cutoff)]
+  );
+  return new Map(rows.map((r) => [r.date, r.count]));
+}
+
+export function computeStreaks(activityMap: Map<string, number>): StreakSummary {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let current = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    if ((activityMap.get(isoDate(d)) ?? 0) > 0) {
+      current++;
+    } else {
+      break;
+    }
+  }
+
+  let longest = 0;
+  let running = 0;
+  const dates = Array.from(activityMap.keys()).sort();
+  if (dates.length > 0) {
+    const earliest = new Date(dates[0] + "T00:00:00");
+    const cursor = new Date(earliest);
+    while (cursor <= today) {
+      if ((activityMap.get(isoDate(cursor)) ?? 0) > 0) {
+        running++;
+        if (running > longest) longest = running;
+      } else {
+        running = 0;
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+
+  let thisWeek = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    thisWeek += activityMap.get(isoDate(d)) ?? 0;
+  }
+
+  return { current, longest, thisWeek };
+}
+
 export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
@@ -128,6 +218,7 @@ export async function setSubtopicCheck(
     "UPDATE kokushi_subtopics SET status = ?, progress_percent = ? WHERE id = ?",
     [status, progress_percent, id]
   );
+  await logActivity();
   return { status, progress_percent };
 }
 
@@ -194,6 +285,7 @@ export async function createResource(
     "INSERT INTO kokushi_resources (subject_id, type, name, total_units, completed_units, order_index) VALUES (?, ?, ?, ?, 0, (SELECT COALESCE(MAX(order_index)+1, 0) FROM kokushi_resources WHERE subject_id = ?))",
     [subjectId, type, name, Math.max(1, totalUnits), subjectId]
   );
+  await logActivity();
   return result.lastInsertId ?? 0;
 }
 
@@ -220,6 +312,9 @@ export async function updateResource(
   if (set.length === 0) return;
   vals.push(id);
   await db.execute(`UPDATE kokushi_resources SET ${set.join(", ")} WHERE id = ?`, vals);
+  if (updates.completed_units !== undefined) {
+    await logActivity();
+  }
 }
 
 export async function deleteResource(id: number): Promise<void> {

@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS kokushi_activity (
+  date  TEXT PRIMARY KEY,
+  count INTEGER NOT NULL DEFAULT 0
+);

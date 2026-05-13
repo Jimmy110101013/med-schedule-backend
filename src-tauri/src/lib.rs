@@ -21,6 +21,12 @@ pub fn run() {
             sql: include_str!("../migrations/003_kokushi_checklist.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 4,
+            description: "create kokushi_activity table for daily study heatmap",
+            sql: include_str!("../migrations/004_kokushi_activity.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

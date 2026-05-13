@@ -5,9 +5,11 @@ import { CalendarDays, GraduationCap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SubjectCard } from "@/components/kokushi/SubjectCard";
+import { ActivityHeatmap } from "@/components/kokushi/ActivityHeatmap";
 import {
   type Subject,
   computeStats,
+  getActivityMap,
   getExamDate,
   getSubjects,
   isTauri,
@@ -18,6 +20,7 @@ export default function KokushiPage() {
   const [tauriReady, setTauriReady] = useState<boolean | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [examDate, setExamDateState] = useState<string | null>(null);
+  const [activityMap, setActivityMap] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
   const [editingDate, setEditingDate] = useState(false);
 
@@ -27,9 +30,14 @@ export default function KokushiPage() {
 
   const refresh = useCallback(async () => {
     if (!isTauri()) return;
-    const [subs, date] = await Promise.all([getSubjects(), getExamDate()]);
+    const [subs, date, activity] = await Promise.all([
+      getSubjects(),
+      getExamDate(),
+      getActivityMap(),
+    ]);
     setSubjects(subs);
     setExamDateState(date);
+    setActivityMap(activity);
     setLoading(false);
   }, []);
 
@@ -137,6 +145,8 @@ export default function KokushiPage() {
           </Card>
         ))}
       </div>
+
+      <ActivityHeatmap activityMap={activityMap} />
 
       <div className="space-y-3">
         <h2 className="text-sm font-semibold text-foreground">Subjects</h2>
