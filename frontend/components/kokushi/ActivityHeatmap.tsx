@@ -1,9 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import { Flame } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { computeStreaks } from "@/lib/kokushi";
+import { computeStreaks, isoDate } from "@/lib/kokushi";
 
 interface Props {
   activityMap: Map<string, number>;
@@ -11,13 +12,6 @@ interface Props {
 }
 
 const WEEKDAY_LABELS = ["", "Mon", "", "Wed", "", "Fri", ""];
-
-function isoDate(d: Date): string {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
 
 function intensityClass(count: number): string {
   if (count === 0) return "bg-muted/30";
@@ -81,8 +75,8 @@ function buildWeeks(activityMap: Map<string, number>, weeks: number): Week[] {
 }
 
 export function ActivityHeatmap({ activityMap, weeks = 16 }: Props) {
-  const weekColumns = buildWeeks(activityMap, weeks);
-  const { current, longest, thisWeek } = computeStreaks(activityMap);
+  const weekColumns = useMemo(() => buildWeeks(activityMap, weeks), [activityMap, weeks]);
+  const { current, longest, thisWeek } = useMemo(() => computeStreaks(activityMap), [activityMap]);
 
   return (
     <Card>

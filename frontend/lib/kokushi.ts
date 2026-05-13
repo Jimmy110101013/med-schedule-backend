@@ -1,3 +1,5 @@
+import type Database from "@tauri-apps/plugin-sql";
+
 export type SubtopicStatus = "not_started" | "in_progress" | "completed";
 export type ResourceType = "book" | "video" | "qbank" | "other";
 export type ChecklistField = "first_pass_done" | "second_pass_done" | "past_exams_done";
@@ -50,98 +52,51 @@ export interface StreakSummary {
   thisWeek: number;
 }
 
-function todayISO(): string {
-  const d = new Date();
+export function isoDate(d: Date): string {
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }
 
-function isoDate(d: Date): string {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-async function logActivity(): Promise<void> {
-  if (!isTauri()) return;
-  const db = await getDb();
-  await db.execute(
-    "INSERT INTO kokushi_activity (date, count) VALUES (?, 1) ON CONFLICT(date) DO UPDATE SET count = count + 1",
-    [todayISO()]
-  );
-}
-
-export async function getActivityMap(daysBack: number = 120): Promise<Map<string, number>> {
-  ensureTauri();
-  const db = await getDb();
-  const cutoff = new Date();
-  cutoff.setHours(0, 0, 0, 0);
-  cutoff.setDate(cutoff.getDate() - daysBack);
-  const rows = await db.select<ActivityRow[]>(
-    "SELECT date, count FROM kokushi_activity WHERE date >= ? ORDER BY date",
-    [isoDate(cutoff)]
-  );
-  return new Map(rows.map((r) => [r.date, r.count]));
-}
-
-export function computeStreaks(activityMap: Map<string, number>): StreakSummary {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  let current = 0;
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    if ((activityMap.get(isoDate(d)) ?? 0) > 0) {
-      current++;
-    } else {
-      break;
-    }
-  }
-
-  let longest = 0;
-  let running = 0;
-  const dates = Array.from(activityMap.keys()).sort();
-  if (dates.length > 0) {
-    const earliest = new Date(dates[0] + "T00:00:00");
-    const cursor = new Date(earliest);
-    while (cursor <= today) {
-      if ((activityMap.get(isoDate(cursor)) ?? 0) > 0) {
-        running++;
-        if (running > longest) longest = running;
-      } else {
-        running = 0;
-      }
-      cursor.setDate(cursor.getDate() + 1);
-    }
-  }
-
-  let thisWeek = 0;
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    thisWeek += activityMap.get(isoDate(d)) ?? 0;
-  }
-
-  return { current, longest, thisWeek };
+export function todayISO(): string {
+  return isoDate(new Date());
 }
 
 export function isTauri(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
 
-async function getDb() {
-  const { default: Database } = await import("@tauri-apps/plugin-sql");
-  return await Database.load("sqlite:med_tracker.db");
+let _dbPromise: Promise<Database> | null = null;
+
+async function getDb(): Promise<Database> {
+  if (!_dbPromise) {
+    _dbPromise = (async () => {
+      const { default: Db } = await import("@tauri-apps/plugin-sql");
+      return await Db.load("sqlite:med_tracker.db");
+    })();
+  }
+  return _dbPromise;
 }
 
 function ensureTauri(): void {
   if (!isTauri()) {
     throw new Error("Kokushi tracker is only available in the desktop app");
   }
+}
+
+function deriveFromChecks(count: number): { status: SubtopicStatus; progress_percent: number } {
+  if (count === 0) return { status: "not_started", progress_percent: 0 };
+  if (count === 3) return { status: "completed", progress_percent: 100 };
+  return { status: "in_progress", progress_percent: Math.round((count / 3) * 100) };
+}
+
+export async function logActivity(): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    "INSERT INTO kokushi_activity (date, count) VALUES (?, 1) ON CONFLICT(date) DO UPDATE SET count = count + 1",
+    [todayISO()]
+  );
 }
 
 interface SubjectRow {
@@ -197,10 +152,6 @@ export async function setSubtopicCheck(
 ): Promise<{ status: SubtopicStatus; progress_percent: number }> {
   ensureTauri();
   const db = await getDb();
-  await db.execute(
-    `UPDATE kokushi_subtopics SET ${field} = ?, updated_at = datetime('now') WHERE id = ?`,
-    [value ? 1 : 0, id]
-  );
   const rows = await db.select<{
     first_pass_done: number;
     second_pass_done: number;
@@ -209,59 +160,17 @@ export async function setSubtopicCheck(
     "SELECT first_pass_done, second_pass_done, past_exams_done FROM kokushi_subtopics WHERE id = ?",
     [id]
   );
-  const r = rows[0];
-  const count = (r?.first_pass_done ?? 0) + (r?.second_pass_done ?? 0) + (r?.past_exams_done ?? 0);
-  const status: SubtopicStatus =
-    count === 0 ? "not_started" : count === 3 ? "completed" : "in_progress";
-  const progress_percent = count === 0 ? 0 : count === 3 ? 100 : Math.round((count / 3) * 100);
+  const current = rows[0];
+  if (!current) throw new Error(`Subtopic ${id} not found`);
+  const updated = { ...current, [field]: value ? 1 : 0 };
+  const count = updated.first_pass_done + updated.second_pass_done + updated.past_exams_done;
+  const derived = deriveFromChecks(count);
   await db.execute(
-    "UPDATE kokushi_subtopics SET status = ?, progress_percent = ? WHERE id = ?",
-    [status, progress_percent, id]
+    `UPDATE kokushi_subtopics SET ${field} = ?, status = ?, progress_percent = ?, updated_at = datetime('now') WHERE id = ?`,
+    [value ? 1 : 0, derived.status, derived.progress_percent, id]
   );
-  await logActivity();
-  return { status, progress_percent };
-}
-
-export interface SubtopicUpdate {
-  status?: SubtopicStatus;
-  progress_percent?: number;
-  notes?: string | null;
-}
-
-export async function updateSubtopic(id: number, updates: SubtopicUpdate): Promise<void> {
-  ensureTauri();
-  const db = await getDb();
-  const set: string[] = [];
-  const vals: unknown[] = [];
-  if (updates.status !== undefined) {
-    set.push("status = ?");
-    vals.push(updates.status);
-    if (updates.progress_percent === undefined) {
-      if (updates.status === "completed") {
-        set.push("progress_percent = 100");
-      } else if (updates.status === "not_started") {
-        set.push("progress_percent = 0");
-      }
-    }
-  }
-  if (updates.progress_percent !== undefined) {
-    const p = Math.max(0, Math.min(100, Math.round(updates.progress_percent)));
-    set.push("progress_percent = ?");
-    vals.push(p);
-    if (updates.status === undefined) {
-      if (p === 0) set.push("status = 'not_started'");
-      else if (p === 100) set.push("status = 'completed'");
-      else set.push("status = 'in_progress'");
-    }
-  }
-  if (updates.notes !== undefined) {
-    set.push("notes = ?");
-    vals.push(updates.notes);
-  }
-  if (set.length === 0) return;
-  set.push("updated_at = datetime('now')");
-  vals.push(id);
-  await db.execute(`UPDATE kokushi_subtopics SET ${set.join(", ")} WHERE id = ?`, vals);
+  if (value) await logActivity();
+  return derived;
 }
 
 export async function getResources(subjectId: number): Promise<Resource[]> {
@@ -312,9 +221,6 @@ export async function updateResource(
   if (set.length === 0) return;
   vals.push(id);
   await db.execute(`UPDATE kokushi_resources SET ${set.join(", ")} WHERE id = ?`, vals);
-  if (updates.completed_units !== undefined) {
-    await logActivity();
-  }
 }
 
 export async function deleteResource(id: number): Promise<void> {
@@ -349,6 +255,19 @@ export async function setExamDate(date: string | null): Promise<void> {
   );
 }
 
+export async function getActivityMap(daysBack: number = 120): Promise<Map<string, number>> {
+  ensureTauri();
+  const db = await getDb();
+  const cutoff = new Date();
+  cutoff.setHours(0, 0, 0, 0);
+  cutoff.setDate(cutoff.getDate() - daysBack);
+  const rows = await db.select<ActivityRow[]>(
+    "SELECT date, count FROM kokushi_activity WHERE date >= ? ORDER BY date",
+    [isoDate(cutoff)]
+  );
+  return new Map(rows.map((r) => [r.date, r.count]));
+}
+
 export function computeDaysToExam(examDate: string | null): number | null {
   if (!examDate) return null;
   const target = new Date(examDate + "T00:00:00");
@@ -376,4 +295,46 @@ export function computeStats(subjects: Subject[], examDate: string | null): Koku
     inProgressSubtopics: inProgress,
     daysToExam: computeDaysToExam(examDate),
   };
+}
+
+export function computeStreaks(activityMap: Map<string, number>): StreakSummary {
+  if (activityMap.size === 0) return { current: 0, longest: 0, thisWeek: 0 };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let current = 0;
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    if ((activityMap.get(isoDate(d)) ?? 0) > 0) {
+      current++;
+    } else {
+      break;
+    }
+  }
+
+  let longest = 0;
+  let running = 0;
+  const sortedDates = Array.from(activityMap.keys()).sort();
+  const earliest = new Date(sortedDates[0] + "T00:00:00");
+  const cursor = new Date(earliest);
+  while (cursor <= today) {
+    if ((activityMap.get(isoDate(cursor)) ?? 0) > 0) {
+      running++;
+      if (running > longest) longest = running;
+    } else {
+      running = 0;
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  let thisWeek = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    thisWeek += activityMap.get(isoDate(d)) ?? 0;
+  }
+
+  return { current, longest, thisWeek };
 }

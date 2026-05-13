@@ -16,11 +16,13 @@ import {
   createResource,
   updateResource,
   deleteResource,
+  logActivity,
 } from "@/lib/kokushi";
 
 interface Props {
   subject: Subject;
-  onSubtopicChanged: () => void;
+  onSubtopicUpdated: (subtopic: Subtopic) => void;
+  onActivity: () => void;
 }
 
 const CHECKLIST_ITEMS: { field: ChecklistField; label: string }[] = [
@@ -75,23 +77,21 @@ function ChecklistChip({ label, checked, onClick }: ChecklistChipProps) {
 
 interface SubtopicCardProps {
   subtopic: Subtopic;
-  onChange: (sub: Subtopic) => void;
+  onUpdated: (sub: Subtopic) => void;
+  onActivity: () => void;
 }
 
-function SubtopicCard({ subtopic, onChange }: SubtopicCardProps) {
+function SubtopicCard({ subtopic, onUpdated, onActivity }: SubtopicCardProps) {
   async function toggle(field: ChecklistField) {
-    const currentValue = subtopic[field];
-    const newValue = !currentValue;
-    const optimistic: Subtopic = { ...subtopic, [field]: newValue };
-    const count =
-      (optimistic.first_pass_done ? 1 : 0) +
-      (optimistic.second_pass_done ? 1 : 0) +
-      (optimistic.past_exams_done ? 1 : 0);
-    optimistic.status = count === 0 ? "not_started" : count === 3 ? "completed" : "in_progress";
-    optimistic.progress_percent = count === 0 ? 0 : count === 3 ? 100 : Math.round((count / 3) * 100);
-    onChange(optimistic);
+    const newValue = !subtopic[field];
     const result = await setSubtopicCheck(subtopic.id, field, newValue);
-    onChange({ ...optimistic, status: result.status, progress_percent: result.progress_percent });
+    onUpdated({
+      ...subtopic,
+      [field]: newValue,
+      status: result.status,
+      progress_percent: result.progress_percent,
+    });
+    if (newValue) onActivity();
   }
 
   return (
@@ -116,14 +116,9 @@ function SubtopicCard({ subtopic, onChange }: SubtopicCardProps) {
   );
 }
 
-export function SubjectCard({ subject, onSubtopicChanged }: Props) {
+export function SubjectCard({ subject, onSubtopicUpdated, onActivity }: Props) {
   const [open, setOpen] = useState(false);
-  const [localSubtopics, setLocalSubtopics] = useState<Subtopic[]>(subject.subtopics);
   const [resources, setResources] = useState<Resource[] | null>(null);
-
-  useEffect(() => {
-    setLocalSubtopics(subject.subtopics);
-  }, [subject.subtopics]);
 
   useEffect(() => {
     if (open && resources === null) {
@@ -131,15 +126,10 @@ export function SubjectCard({ subject, onSubtopicChanged }: Props) {
     }
   }, [open, resources, subject.id]);
 
-  const totalCount = localSubtopics.length;
-  const completedCount = localSubtopics.filter((s) => s.status === "completed").length;
+  const totalCount = subject.subtopics.length;
+  const completedCount = subject.subtopics.filter((s) => s.status === "completed").length;
   const completionPct =
     totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
-
-  function updateLocalSubtopic(updated: Subtopic) {
-    setLocalSubtopics((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
-    onSubtopicChanged();
-  }
 
   async function handleAddResource(type: ResourceType) {
     const name = window.prompt(`New ${RESOURCE_LABEL[type]} name:`);
@@ -149,16 +139,22 @@ export function SubjectCard({ subject, onSubtopicChanged }: Props) {
     if (!Number.isFinite(total) || total < 1) return;
     await createResource(subject.id, type, name, Math.round(total));
     setResources(await getResources(subject.id));
+    onActivity();
   }
 
   async function handleResourceStep(resource: Resource, delta: number) {
     const newCompleted = Math.max(0, Math.min(resource.total_units, resource.completed_units + delta));
+    if (newCompleted === resource.completed_units) return;
     setResources((prev) =>
       prev
         ? prev.map((r) => (r.id === resource.id ? { ...r, completed_units: newCompleted } : r))
         : prev
     );
     await updateResource(resource.id, { completed_units: newCompleted });
+    if (delta > 0) {
+      await logActivity();
+      onActivity();
+    }
   }
 
   async function handleResourceDelete(resource: Resource) {
@@ -206,11 +202,12 @@ export function SubjectCard({ subject, onSubtopicChanged }: Props) {
       {open && (
         <div className="border-t px-6 py-5 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {localSubtopics.map((sub) => (
+            {subject.subtopics.map((sub) => (
               <SubtopicCard
                 key={sub.id}
                 subtopic={sub}
-                onChange={updateLocalSubtopic}
+                onUpdated={onSubtopicUpdated}
+                onActivity={onActivity}
               />
             ))}
           </div>

@@ -6,15 +6,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SubjectCard } from "@/components/kokushi/SubjectCard";
 import { ActivityHeatmap } from "@/components/kokushi/ActivityHeatmap";
+import { SubjectRadar } from "@/components/kokushi/SubjectRadar";
 import {
   type Subject,
+  type Subtopic,
   computeStats,
   getActivityMap,
   getExamDate,
   getSubjects,
   isTauri,
   setExamDate,
+  todayISO,
 } from "@/lib/kokushi";
+
+function formatDaysToExam(days: number | null): string {
+  if (days === null) return "—";
+  if (days < 0) return `${Math.abs(days)}d ago`;
+  return `${days}d`;
+}
 
 export default function KokushiPage() {
   const [tauriReady, setTauriReady] = useState<boolean | null>(null);
@@ -28,8 +37,7 @@ export default function KokushiPage() {
     setTauriReady(isTauri());
   }, []);
 
-  const refresh = useCallback(async () => {
-    if (!isTauri()) return;
+  const loadAll = useCallback(async () => {
     const [subs, date, activity] = await Promise.all([
       getSubjects(),
       getExamDate(),
@@ -42,10 +50,29 @@ export default function KokushiPage() {
   }, []);
 
   useEffect(() => {
-    if (tauriReady) void refresh();
-  }, [tauriReady, refresh]);
+    if (tauriReady) void loadAll();
+  }, [tauriReady, loadAll]);
 
   const stats = useMemo(() => computeStats(subjects, examDate), [subjects, examDate]);
+
+  const bumpToday = useCallback(() => {
+    setActivityMap((prev) => {
+      const next = new Map(prev);
+      const key = todayISO();
+      next.set(key, (next.get(key) ?? 0) + 1);
+      return next;
+    });
+  }, []);
+
+  const handleSubtopicUpdated = useCallback((updated: Subtopic) => {
+    setSubjects((prev) =>
+      prev.map((s) =>
+        s.id === updated.subject_id
+          ? { ...s, subtopics: s.subtopics.map((t) => (t.id === updated.id ? updated : t)) }
+          : s
+      )
+    );
+  }, []);
 
   async function handleSaveDate(value: string) {
     await setExamDate(value || null);
@@ -84,15 +111,7 @@ export default function KokushiPage() {
     { label: "Total Subtopics", value: stats.totalSubtopics.toString() },
     { label: "Completed", value: stats.completedSubtopics.toString() },
     { label: "In Progress", value: stats.inProgressSubtopics.toString() },
-    {
-      label: "Days to Exam",
-      value:
-        stats.daysToExam === null
-          ? "—"
-          : stats.daysToExam < 0
-          ? `${Math.abs(stats.daysToExam)}d ago`
-          : `${stats.daysToExam}d`,
-    },
+    { label: "Days to Exam", value: formatDaysToExam(stats.daysToExam) },
   ];
 
   return (
@@ -146,7 +165,10 @@ export default function KokushiPage() {
         ))}
       </div>
 
-      <ActivityHeatmap activityMap={activityMap} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ActivityHeatmap activityMap={activityMap} weeks={13} />
+        <SubjectRadar subjects={subjects} />
+      </div>
 
       <div className="space-y-3">
         <h2 className="text-sm font-semibold text-foreground">Subjects</h2>
@@ -163,7 +185,8 @@ export default function KokushiPage() {
             <SubjectCard
               key={subject.id}
               subject={subject}
-              onSubtopicChanged={() => void refresh()}
+              onSubtopicUpdated={handleSubtopicUpdated}
+              onActivity={bumpToday}
             />
           ))
         )}
