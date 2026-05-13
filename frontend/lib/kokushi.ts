@@ -99,6 +99,17 @@ export async function logActivity(): Promise<void> {
   );
 }
 
+async function logSubtopicCheckOnce(subtopicId: number, field: ChecklistField): Promise<boolean> {
+  const db = await getDb();
+  const result = await db.execute(
+    "INSERT OR IGNORE INTO kokushi_subtopic_check_log (date, subtopic_id, field) VALUES (?, ?, ?)",
+    [todayISO(), subtopicId, field]
+  );
+  const inserted = (result.rowsAffected ?? 0) > 0;
+  if (inserted) await logActivity();
+  return inserted;
+}
+
 interface SubjectRow {
   id: number;
   name: string;
@@ -149,7 +160,7 @@ export async function setSubtopicCheck(
   id: number,
   field: ChecklistField,
   value: boolean
-): Promise<{ status: SubtopicStatus; progress_percent: number }> {
+): Promise<{ status: SubtopicStatus; progress_percent: number; activityLogged: boolean }> {
   ensureTauri();
   const db = await getDb();
   const rows = await db.select<{
@@ -169,8 +180,8 @@ export async function setSubtopicCheck(
     `UPDATE kokushi_subtopics SET ${field} = ?, status = ?, progress_percent = ?, updated_at = datetime('now') WHERE id = ?`,
     [value ? 1 : 0, derived.status, derived.progress_percent, id]
   );
-  if (value) await logActivity();
-  return derived;
+  const activityLogged = value ? await logSubtopicCheckOnce(id, field) : false;
+  return { ...derived, activityLogged };
 }
 
 export async function getResources(subjectId: number): Promise<Resource[]> {

@@ -27,6 +27,12 @@ pub fn run() {
             sql: include_str!("../migrations/004_kokushi_activity.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 5,
+            description: "add subtopic check dedup log; reset inflated activity counts",
+            sql: include_str!("../migrations/005_kokushi_check_log.sql"),
+            kind: MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

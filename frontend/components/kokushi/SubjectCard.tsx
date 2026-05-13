@@ -91,7 +91,7 @@ function SubtopicCard({ subtopic, onUpdated, onActivity }: SubtopicCardProps) {
       status: result.status,
       progress_percent: result.progress_percent,
     });
-    if (newValue) onActivity();
+    if (result.activityLogged) onActivity();
   }
 
   return (

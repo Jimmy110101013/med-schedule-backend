@@ -165,8 +165,8 @@ export default function KokushiPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <ActivityHeatmap activityMap={activityMap} weeks={13} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+        <ActivityHeatmap activityMap={activityMap} weeks={18} />
         <SubjectRadar subjects={subjects} />
       </div>
 

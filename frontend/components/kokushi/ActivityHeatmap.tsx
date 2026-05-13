@@ -102,18 +102,18 @@ export function ActivityHeatmap({ activityMap, weeks = 16 }: Props) {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <div className="inline-block">
-            <div className="flex gap-1 mb-1 text-[10px] text-muted-foreground" style={{ paddingLeft: "1.75rem" }}>
+          <div className="inline-block mx-auto">
+            <div className="flex gap-1 mb-1.5 text-[10px] text-muted-foreground" style={{ paddingLeft: "2rem" }}>
               {weekColumns.map((w, i) => (
-                <span key={i} className="w-3 shrink-0">
+                <span key={i} className="w-4 shrink-0 whitespace-nowrap">
                   {w.monthLabel ?? ""}
                 </span>
               ))}
             </div>
             <div className="flex gap-1">
-              <div className="flex flex-col gap-1 text-[10px] text-muted-foreground pr-1 w-6">
+              <div className="flex flex-col gap-1 text-[10px] text-muted-foreground pr-1 w-7">
                 {WEEKDAY_LABELS.map((label, i) => (
-                  <span key={i} className="h-3 leading-[0.75rem]">
+                  <span key={i} className="h-4 leading-4">
                     {label}
                   </span>
                 ))}
@@ -124,8 +124,10 @@ export function ActivityHeatmap({ activityMap, weeks = 16 }: Props) {
                     <div
                       key={cell.date}
                       className={cn(
-                        "w-3 h-3 rounded-sm",
-                        cell.isFuture ? "bg-muted/10 border border-muted/20" : intensityClass(cell.count)
+                        "w-4 h-4 rounded-sm border",
+                        cell.isFuture
+                          ? "bg-muted/5 border-muted/20"
+                          : cn(intensityClass(cell.count), "border-border/30")
                       )}
                       title={
                         cell.isFuture
@@ -139,13 +141,13 @@ export function ActivityHeatmap({ activityMap, weeks = 16 }: Props) {
             </div>
           </div>
         </div>
-        <div className="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-muted-foreground">
+        <div className="mt-4 flex items-center justify-end gap-1.5 text-[10px] text-muted-foreground">
           <span>Less</span>
-          <div className="w-3 h-3 rounded-sm bg-muted/30" />
-          <div className="w-3 h-3 rounded-sm bg-emerald-900" />
-          <div className="w-3 h-3 rounded-sm bg-emerald-700" />
-          <div className="w-3 h-3 rounded-sm bg-emerald-500" />
-          <div className="w-3 h-3 rounded-sm bg-emerald-400" />
+          <div className="w-4 h-4 rounded-sm border border-border/30 bg-muted/30" />
+          <div className="w-4 h-4 rounded-sm border border-border/30 bg-emerald-900" />
+          <div className="w-4 h-4 rounded-sm border border-border/30 bg-emerald-700" />
+          <div className="w-4 h-4 rounded-sm border border-border/30 bg-emerald-500" />
+          <div className="w-4 h-4 rounded-sm border border-border/30 bg-emerald-400" />
           <span>More</span>
         </div>
       </CardContent>
