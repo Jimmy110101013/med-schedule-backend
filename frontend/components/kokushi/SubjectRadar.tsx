@@ -31,36 +31,46 @@ function ratio(subject: Subject, field: ChecklistField): number {
   return done / subject.subtopics.length;
 }
 
+function sectorPath(a0: number, a1: number, r: number): string {
+  if (r <= 0 || a1 <= a0) return "";
+  const p0 = polar(a0, r);
+  const p1 = polar(a1, r);
+  const largeArc = a1 - a0 > Math.PI ? 1 : 0;
+  return `M ${CX.toFixed(2)} ${CY.toFixed(2)} L ${p0.x.toFixed(2)} ${p0.y.toFixed(
+    2,
+  )} A ${r.toFixed(2)} ${r.toFixed(2)} 0 ${largeArc} 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} Z`;
+}
+
 export function SubjectRadar({ subjects }: Props) {
   const data = useMemo(() => {
     if (subjects.length === 0) return null;
     const angleStep = (2 * Math.PI) / subjects.length;
     const angles = subjects.map((_, i) => -Math.PI / 2 + i * angleStep);
-    const axes = angles.map((a, i) => {
-      const tip = polar(a, R);
+    const labels = angles.map((a, i) => {
       const lbl = polar(a, LABEL_R);
-      return { angle: a, tx: tip.x, ty: tip.y, lx: lbl.x, ly: lbl.y, name: subjects[i].name };
+      return { lx: lbl.x, ly: lbl.y, name: subjects[i].name };
     });
-    const seriesPoints = SERIES.map((s) => {
-      const points = subjects
-        .map((subject, i) => {
-          const v = ratio(subject, s.field);
-          const p = polar(angles[i], R * v);
-          return `${p.x.toFixed(2)},${p.y.toFixed(2)}`;
-        })
-        .join(" ");
-      return { ...s, points };
+    const boundaries = subjects.map((_, i) => {
+      const a = -Math.PI / 2 + (i - 0.5) * angleStep;
+      const tip = polar(a, R);
+      return { x: tip.x, y: tip.y };
     });
-    const gridPolygons = Array.from({ length: GRID_LEVELS }, (_, level) => {
-      const r = (R * (level + 1)) / GRID_LEVELS;
-      return angles
-        .map((a) => {
-          const p = polar(a, r);
-          return `${p.x.toFixed(2)},${p.y.toFixed(2)}`;
-        })
-        .join(" ");
+    const sectors = subjects.flatMap((subject, i) => {
+      const a0 = angles[i] - angleStep / 2;
+      const subStep = angleStep / SERIES.length;
+      return SERIES.map((s, j) => {
+        const v = ratio(subject, s.field);
+        const aa0 = a0 + j * subStep;
+        const aa1 = aa0 + subStep;
+        return {
+          key: `${subject.id}-${s.field}`,
+          path: sectorPath(aa0, aa1, R * v),
+          color: s.color,
+        };
+      });
     });
-    return { axes, seriesPoints, gridPolygons };
+    const gridRadii = Array.from({ length: GRID_LEVELS }, (_, level) => (R * (level + 1)) / GRID_LEVELS);
+    return { labels, boundaries, sectors, gridRadii };
   }, [subjects]);
 
   return (
@@ -90,40 +100,43 @@ export function SubjectRadar({ subjects }: Props) {
             className="w-full max-w-md mx-auto text-foreground"
             aria-label="Subject progress radar"
           >
-            {data.gridPolygons.map((pts, i) => (
-              <polygon
+            {data.gridRadii.map((r, i) => (
+              <circle
                 key={i}
-                points={pts}
+                cx={CX}
+                cy={CY}
+                r={r}
                 fill="none"
                 stroke="currentColor"
                 strokeOpacity={0.15}
                 strokeWidth={1}
               />
             ))}
-            {data.axes.map((ax, i) => (
+            {data.sectors.map((s) => (
+              <path
+                key={s.key}
+                d={s.path}
+                fill={s.color}
+                fillOpacity={0.55}
+                stroke={s.color}
+                strokeOpacity={0.9}
+                strokeWidth={0.75}
+                strokeLinejoin="round"
+              />
+            ))}
+            {data.boundaries.map((b, i) => (
               <line
                 key={i}
                 x1={CX}
                 y1={CY}
-                x2={ax.tx}
-                y2={ax.ty}
+                x2={b.x}
+                y2={b.y}
                 stroke="currentColor"
-                strokeOpacity={0.15}
+                strokeOpacity={0.2}
                 strokeWidth={1}
               />
             ))}
-            {data.seriesPoints.map((s) => (
-              <polygon
-                key={s.label}
-                points={s.points}
-                fill={s.color}
-                fillOpacity={0.2}
-                stroke={s.color}
-                strokeWidth={1.5}
-                strokeLinejoin="round"
-              />
-            ))}
-            {data.axes.map((ax, i) => {
+            {data.labels.map((ax, i) => {
               const dx = ax.lx - CX;
               const anchor: "start" | "middle" | "end" =
                 Math.abs(dx) < 5 ? "middle" : dx > 0 ? "start" : "end";
