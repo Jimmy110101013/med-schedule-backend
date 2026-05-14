@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "@/components/ui/sonner";
 import Sidebar from "@/components/Sidebar";
+import { VersionWatcher } from "@/components/VersionWatcher";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -41,6 +43,8 @@ export default function RootLayout({
               {children}
             </main>
           </div>
+          <VersionWatcher />
+          <Toaster position="bottom-right" />
         </ThemeProvider>
       </body>
     </html>
